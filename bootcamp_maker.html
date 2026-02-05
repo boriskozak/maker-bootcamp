@@ -7,15 +7,16 @@
     <title>The 10x Maker Boot Camp: Code-to-Reality Protocol</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;800&display=swap');
 
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f5f5f4;
-            /* Stone 100 - Warm Neutral Background */
-            color: #1c1917;
-            /* Stone 900 */
+            background-color: #020617;
+            /* Slate 950 */
+            color: #cbd5e1;
+            /* Slate 300 */
         }
 
         h1,
@@ -43,23 +44,134 @@
         }
 
         .code-block::-webkit-scrollbar-track {
-            background: #292524;
+            background: #0f172a;
+            /* Slate 900 */
         }
 
         .code-block::-webkit-scrollbar-thumb {
-            background: #f59e0b;
-            /* Amber 500 */
+            background: #6366f1;
+            /* Indigo 500 */
             border-radius: 4px;
         }
 
         .card-hover:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.15);
+            /* Indigo glow */
+            border-color: #6366f1;
         }
 
         .step-check:checked+label {
             text-decoration: line-through;
-            color: #a8a29e;
+            color: #64748b;
+            /* Slate 500 */
+        }
+
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            /* 16:9 aspect ratio */
+            height: 0;
+            overflow: hidden;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+
+        /* Fire Overlay Styles */
+        #day-done-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        #day-done-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .fire-text {
+            font-family: 'Inter', sans-serif;
+            font-size: 5rem;
+            font-weight: 900;
+            color: #fff;
+            text-transform: uppercase;
+            text-shadow: 0 0 20px #f59e0b, 0 0 40px #ef4444;
+            animation: pulse-glow 1s infinite alternate, scale-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            transform: scale(0);
+        }
+
+        @keyframes pulse-glow {
+            from {
+                text-shadow: 0 0 20px #f59e0b, 0 0 40px #ef4444;
+            }
+
+            to {
+                text-shadow: 0 0 40px #f59e0b, 0 0 80px #ef4444, 0 0 100px #7f1d1d;
+            }
+        }
+
+        @keyframes scale-in {
+            to {
+                transform: scale(1);
+            }
+        }
+
+        /* CSS Fire Animation */
+        .fire-container {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .fire-particle {
+            position: absolute;
+            bottom: -50px;
+            width: 20px;
+            height: 20px;
+            background: radial-gradient(circle, #fcd34d 0%, #ef4444 60%, rgba(0, 0, 0, 0) 100%);
+            border-radius: 50%;
+            opacity: 0;
+            animation: rise 2s infinite ease-in;
+        }
+
+        @keyframes rise {
+            0% {
+                bottom: -20px;
+                transform: translateX(0) scale(1);
+                opacity: 0;
+            }
+
+            20% {
+                opacity: 1;
+            }
+
+            100% {
+                bottom: 80%;
+                transform: translateX(var(--drift)) scale(0.2);
+                opacity: 0;
+            }
         }
     </style>
 </head>
@@ -89,15 +201,18 @@
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
 
     <!-- Header -->
-    <header class="bg-stone-900 text-stone-100 border-b-4 border-amber-500 sticky top-0 z-50 shadow-lg">
+    <header class="bg-slate-950/80 backdrop-blur-md text-slate-100 border-b border-indigo-500/20 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
             <div>
-                <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-amber-500">10x MAKER PROTOCOL</h1>
-                <p class="text-xs sm:text-sm text-stone-400 mono">STATUS: SABBATICAL MODE // DAY <span
-                        id="current-day-display">0</span></p>
+                <h1
+                    class="text-xl sm:text-2xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">
+                    10x MAKER PROTOCOL</h1>
+                <p class="text-xs sm:text-sm text-slate-500 mono">STATUS: SABBATICAL MODE // DAY <span
+                        id="current-day-display" class="text-indigo-400">0</span></p>
             </div>
             <div class="flex space-x-4">
-                <button onclick="resetProgress()" class="text-xs text-stone-500 hover:text-red-400 underline">Reset
+                <button onclick="resetProgress()"
+                    class="text-xs text-slate-500 hover:text-red-400 underline transition-colors">Reset
                     Protocol</button>
             </div>
         </div>
@@ -108,44 +223,53 @@
         <!-- Intro Section -->
         <section class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div class="lg:col-span-2 space-y-4">
-                <div class="bg-white p-6 rounded-lg shadow-sm border border-stone-200">
-                    <h2 class="text-2xl font-bold text-stone-800 mb-2">Objective: Zero-Friction Fabrication</h2>
-                    <p class="text-stone-600 mb-4">
+                <div class="bg-slate-900/50 backdrop-blur-sm p-6 rounded-lg border border-slate-800 shadow-xl">
+                    <h2 class="text-2xl font-bold text-slate-100 mb-2">Objective: Zero-Friction Fabrication</h2>
+                    <p class="text-slate-400 mb-4">
                         You are an engineer. You don't "tinker" endlessly; you deploy systems. This 21-day boot camp is
                         designed to build your
-                        <strong>Manufacturing Stack</strong>. By Day 21, you will not just know how to use your
+                        <strong class="text-indigo-400">Manufacturing Stack</strong>. By Day 21, you will not just know
+                        how to use your
                         tools—you will have a workflow
                         that turns code into physical objects in minutes.
                     </p>
-                    <div class="p-4 bg-amber-50 border-l-4 border-amber-500 text-amber-900 text-sm">
-                        <span class="font-bold">CRITICAL SAFETY PROTOCOL:</span> Do NOT attempt to laser cut Mirror
+                    <div class="p-4 bg-orange-950/30 border-l-4 border-orange-500 text-orange-200 text-sm rounded-r">
+                        <span class="font-bold text-orange-400">CRITICAL SAFETY PROTOCOL:</span> Do NOT attempt to laser
+                        cut Mirror
                         Acrylic with your Falcon 2 (Diode Laser).
                         The blue light passes through the clear layer, reflects off the mirror backing, and can destroy
                         your laser module.
-                        We will use the <strong>"Faux Mirror" Hybrid Method</strong> (Wood/Black Acrylic + Mirror Vinyl)
+                        We will use the <strong class="text-white">"Faux Mirror" Hybrid Method</strong> (Wood/Black
+                        Acrylic + Mirror Vinyl)
                         exclusively.
                     </div>
                 </div>
 
                 <!-- The Stack Grid -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div class="bg-stone-800 text-stone-100 p-5 rounded-lg shadow-sm">
-                        <h3 class="text-amber-500 font-bold mono mb-3">HARDWARE STACK</h3>
+                    <div class="bg-slate-900 border border-slate-800 text-slate-300 p-5 rounded-lg">
+                        <h3 class="text-indigo-400 font-bold mono mb-3">HARDWARE STACK</h3>
                         <ul class="space-y-2 text-sm">
-                            <li class="flex items-center"><span class="mr-2">🖨️</span> Bambu Lab (AMS enabled)</li>
-                            <li class="flex items-center"><span class="mr-2">🔫</span> Creality Falcon 2 (40W Diode)
+                            <li class="flex items-center"><span class="mr-2 opacity-70">🖨️</span> Bambu Lab (AMS
+                                enabled)</li>
+                            <li class="flex items-center"><span class="mr-2 opacity-70">🔫</span> Creality Falcon 2 (40W
+                                Diode)
                             </li>
-                            <li class="flex items-center"><span class="mr-2">✂️</span> Cricut Maker 3</li>
-                            <li class="flex items-center"><span class="mr-2">📏</span> Mitutoyo Calipers</li>
+                            <li class="flex items-center"><span class="mr-2 opacity-70">✂️</span> Cricut Maker 3</li>
+                            <li class="flex items-center"><span class="mr-2 opacity-70">📏</span> Mitutoyo Calipers</li>
                         </ul>
                     </div>
-                    <div class="bg-stone-800 text-stone-100 p-5 rounded-lg shadow-sm">
-                        <h3 class="text-blue-400 font-bold mono mb-3">SOFTWARE STACK</h3>
+                    <div class="bg-slate-900 border border-slate-800 text-slate-300 p-5 rounded-lg">
+                        <h3 class="text-cyan-400 font-bold mono mb-3">SOFTWARE STACK</h3>
                         <ul class="space-y-2 text-sm">
-                            <li class="flex items-center"><span class="mr-2">💻</span> Fusion 360 (Parametric CAD)</li>
-                            <li class="flex items-center"><span class="mr-2">🔥</span> LightBurn (Laser Control)</li>
-                            <li class="flex items-center"><span class="mr-2">🐍</span> Python (VS Code + libraries)</li>
-                            <li class="flex items-center"><span class="mr-2">🧠</span> ChatGPT/Midjourney (Asset Gen)
+                            <li class="flex items-center"><span class="mr-2 opacity-70">💻</span> Fusion 360 (Parametric
+                                CAD)</li>
+                            <li class="flex items-center"><span class="mr-2 opacity-70">🔥</span> LightBurn (Laser
+                                Control)</li>
+                            <li class="flex items-center"><span class="mr-2 opacity-70">🐍</span> Python (VS Code +
+                                libraries)</li>
+                            <li class="flex items-center"><span class="mr-2 opacity-70">🧠</span> ChatGPT/Midjourney
+                                (Asset Gen)
                             </li>
                         </ul>
                     </div>
@@ -153,16 +277,17 @@
             </div>
 
             <!-- Chart Section -->
-            <div class="bg-white p-6 rounded-lg shadow-sm border border-stone-200 flex flex-col justify-between">
+            <div
+                class="bg-slate-900/50 backdrop-blur-sm p-6 rounded-lg border border-slate-800 flex flex-col justify-between shadow-xl">
                 <div>
-                    <h3 class="text-lg font-bold text-stone-800 mb-2">Effort vs. Output</h3>
-                    <p class="text-xs text-stone-500 mb-4">Transitioning from manual labor to automated scripts.</p>
+                    <h3 class="text-lg font-bold text-slate-100 mb-2">Effort vs. Output</h3>
+                    <p class="text-xs text-slate-500 mb-4">Transitioning from manual labor to automated scripts.</p>
                 </div>
                 <div class="chart-container">
                     <canvas id="skillChart"></canvas>
                 </div>
                 <div class="mt-4 text-center">
-                    <p class="text-xs mono text-stone-400">PROJECTED TRAJECTORY</p>
+                    <p class="text-xs mono text-slate-600">PROJECTED TRAJECTORY</p>
                 </div>
             </div>
         </section>
@@ -170,56 +295,75 @@
         <!-- Phase 1: Infrastructure -->
         <section>
             <div class="flex items-center mb-6">
-                <div class="bg-stone-800 text-white font-bold px-3 py-1 rounded mr-3 mono">PHASE 1</div>
-                <h2 class="text-2xl font-bold text-stone-800">The Infrastructure (Days 1-3)</h2>
+                <div class="bg-slate-800 text-indigo-400 font-bold px-3 py-1 rounded mr-3 mono border border-slate-700">
+                    PHASE 1</div>
+                <h2 class="text-2xl font-bold text-slate-100">The Infrastructure (Days 1-3)</h2>
             </div>
-            <p class="text-stone-600 mb-6 max-w-3xl">
+            <p class="text-slate-400 mb-6 max-w-3xl">
                 Before making, we must prepare the environment. Friction kills momentum. If you have to search for a
                 tool or guess a setting, you've already failed.
             </p>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <!-- Day 1 -->
-                <div class="bg-white p-6 rounded-lg border-t-4 border-blue-500 shadow-sm card-hover">
-                    <h3 class="font-bold text-lg mb-2">Day 1: The Digital Arsenal</h3>
-                    <p class="text-sm text-stone-600 mb-4">Install the "Stack" and organize your file system.</p>
-                    <ul class="text-sm space-y-2 text-stone-700">
-                        <li class="flex items-start"><input type="checkbox" class="mt-1 mr-2 step-check"
-                                id="d1-1"><label for="d1-1">Install Fusion 360 & LightBurn.</label></li>
-                        <li class="flex items-start"><input type="checkbox" class="mt-1 mr-2 step-check"
-                                id="d1-2"><label for="d1-2">Setup Python: `pip install build123d ezdxf osmnx`.</label>
+                <div
+                    class="bg-slate-900/50 backdrop-blur-sm p-6 rounded-lg border-t-4 border-indigo-500 border-l border-r border-b border-slate-800 shadow-lg card-hover">
+                    <h3 class="font-bold text-lg mb-2 text-slate-200">Day 1: The Digital Arsenal</h3>
+                    <p class="text-sm text-slate-500 mb-4">Install the "Stack" and organize your file system.</p>
+                    <div class="video-container">
+                        <iframe src="https://www.youtube.com/embed/xsBHadlfzDU" title="Fusion 360 Tutorial"
+                            allowfullscreen></iframe>
+                    </div>
+                    <ul class="text-sm space-y-2 text-slate-400">
+                        <li class="flex items-start"><input type="checkbox"
+                                class="mt-1 mr-2 step-check accent-indigo-500" id="d1-1"><label for="d1-1">Install
+                                Fusion 360 & LightBurn.</label></li>
+                        <li class="flex items-start"><input type="checkbox"
+                                class="mt-1 mr-2 step-check accent-indigo-500" id="d1-2"><label for="d1-2">Setup Python:
+                                `pip install build123d`.</label>
                         </li>
-                        <li class="flex items-start"><input type="checkbox" class="mt-1 mr-2 step-check"
-                                id="d1-3"><label for="d1-3">Create folders: `00_Inbox`, `01_Assets`, `02_GCODE`.</label>
+                        <li class="flex items-start"><input type="checkbox"
+                                class="mt-1 mr-2 step-check accent-indigo-500" id="d1-3"><label for="d1-3">Create
+                                folders: `00_Inbox`...</label>
                         </li>
                     </ul>
                 </div>
 
                 <!-- Day 2 -->
-                <div class="bg-white p-6 rounded-lg border-t-4 border-amber-500 shadow-sm card-hover">
-                    <h3 class="font-bold text-lg mb-2">Day 2: Physical "Mise en Place"</h3>
-                    <p class="text-sm text-stone-600 mb-4">Clear the workspace. If it's not a tool, bin it.</p>
-                    <ul class="text-sm space-y-2 text-stone-700">
-                        <li class="flex items-start"><input type="checkbox" class="mt-1 mr-2 step-check"
+                <div
+                    class="bg-slate-900/50 backdrop-blur-sm p-6 rounded-lg border-t-4 border-cyan-500 border-l border-r border-b border-slate-800 shadow-lg card-hover">
+                    <h3 class="font-bold text-lg mb-2 text-slate-200">Day 2: Physical "Mise en Place"</h3>
+                    <p class="text-sm text-slate-500 mb-4">Clear the workspace. If it's not a tool, bin it.</p>
+                    <div class="video-container">
+                        <iframe src="https://www.youtube.com/embed/2PJXnxMBVqk" title="Cricut Setup"
+                            allowfullscreen></iframe>
+                    </div>
+                    <ul class="text-sm space-y-2 text-slate-400">
+                        <li class="flex items-start"><input type="checkbox" class="mt-1 mr-2 step-check accent-cyan-500"
                                 id="d2-1"><label for="d2-1">Buy "Dump Bin" for desk clutter.</label></li>
-                        <li class="flex items-start"><input type="checkbox" class="mt-1 mr-2 step-check"
+                        <li class="flex items-start"><input type="checkbox" class="mt-1 mr-2 step-check accent-cyan-500"
                                 id="d2-2"><label for="d2-2">Unbox & Calibrate Cricut Maker 3.</label></li>
-                        <li class="flex items-start"><input type="checkbox" class="mt-1 mr-2 step-check"
+                        <li class="flex items-start"><input type="checkbox" class="mt-1 mr-2 step-check accent-cyan-500"
                                 id="d2-3"><label for="d2-3">Verify venting for Falcon 2.</label></li>
                     </ul>
                 </div>
 
                 <!-- Day 3 -->
-                <div class="bg-white p-6 rounded-lg border-t-4 border-red-500 shadow-sm card-hover">
-                    <h3 class="font-bold text-lg mb-2">Day 3: The "Truth" Data</h3>
-                    <p class="text-sm text-stone-600 mb-4">Create physical reference cards. Stop guessing.</p>
-                    <ul class="text-sm space-y-2 text-stone-700">
-                        <li class="flex items-start"><input type="checkbox" class="mt-1 mr-2 step-check"
-                                id="d3-1"><label for="d3-1">Laser: Run Material Test (Basswood/Acrylic).</label></li>
-                        <li class="flex items-start"><input type="checkbox" class="mt-1 mr-2 step-check"
-                                id="d3-2"><label for="d3-2">Cricut: Test cut Gold Mirror Vinyl (Pressure check).</label>
+                <div
+                    class="bg-slate-900/50 backdrop-blur-sm p-6 rounded-lg border-t-4 border-rose-500 border-l border-r border-b border-slate-800 shadow-lg card-hover">
+                    <h3 class="font-bold text-lg mb-2 text-slate-200">Day 3: The "Truth" Data</h3>
+                    <p class="text-sm text-slate-500 mb-4">Create physical reference cards. Stop guessing.</p>
+                    <div class="video-container">
+                        <iframe src="https://www.youtube.com/embed/R8uQVpeXr34" title="Laser Material Test"
+                            allowfullscreen></iframe>
+                    </div>
+                    <ul class="text-sm space-y-2 text-slate-400">
+                        <li class="flex items-start"><input type="checkbox" class="mt-1 mr-2 step-check accent-rose-500"
+                                id="d3-1"><label for="d3-1">Laser: Run Material Test (Basswood).</label></li>
+                        <li class="flex items-start"><input type="checkbox" class="mt-1 mr-2 step-check accent-rose-500"
+                                id="d3-2"><label for="d3-2">Cricut: Test cut Gold Mirror Vinyl.</label>
                         </li>
-                        <li class="flex items-start"><input type="checkbox" class="mt-1 mr-2 step-check"
+                        <li class="flex items-start"><input type="checkbox" class="mt-1 mr-2 step-check accent-rose-500"
                                 id="d3-3"><label for="d3-3">Hang test cards on the wall.</label></li>
                     </ul>
                 </div>
@@ -229,10 +373,11 @@
         <!-- Phase 2: The Projects -->
         <section id="phase2">
             <div class="flex items-center mb-6">
-                <div class="bg-stone-800 text-white font-bold px-3 py-1 rounded mr-3 mono">PHASE 2</div>
-                <h2 class="text-2xl font-bold text-stone-800">The Sprint (Days 4-12)</h2>
+                <div class="bg-slate-800 text-indigo-400 font-bold px-3 py-1 rounded mr-3 mono border border-slate-700">
+                    PHASE 2</div>
+                <h2 class="text-2xl font-bold text-slate-100">The Sprint (Days 4-12)</h2>
             </div>
-            <p class="text-stone-600 mb-6 max-w-3xl">
+            <p class="text-slate-400 mb-6 max-w-3xl">
                 The core curriculum. Each day introduces a new integration or software concept. Click a project to see
                 the "Recipe."
             </p>
@@ -243,28 +388,37 @@
         </section>
 
         <!-- Phase 3: The Finale -->
-        <section class="bg-stone-800 text-stone-100 rounded-xl p-8 shadow-xl border border-stone-700">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+        <section
+            class="bg-slate-900/80 backdrop-blur-sm text-slate-100 rounded-xl p-8 shadow-2xl border border-slate-700 relative overflow-hidden">
+            <div
+                class="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none">
+            </div>
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 relative z-10">
                 <div>
-                    <h2 class="text-3xl font-bold text-amber-500 mb-2">PHASE 3: THE CAPSTONE</h2>
-                    <h3 class="text-xl font-semibold">Project: The Generative Lake Shadowbox</h3>
-                    <p class="text-stone-400 text-sm mono">TARGET: Blakeslee, PA // TECH: Python + Laser + Print +
+                    <h2
+                        class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500 mb-2">
+                        PHASE 3: THE CAPSTONE</h2>
+                    <h3 class="text-xl font-semibold text-slate-200">Project: The Generative Lake Shadowbox</h3>
+                    <p class="text-slate-500 text-sm mono">TARGET: Blakeslee, PA // TECH: Python + Laser + Print +
                         Cricut</p>
                 </div>
-                <div class="mt-4 md:mt-0 bg-stone-900 px-4 py-2 rounded border border-stone-600">
-                    <span class="text-xs text-stone-500 uppercase tracking-wider">Estimated Time</span>
-                    <div class="text-2xl font-bold">Days 13-21</div>
+                <div class="mt-4 md:mt-0 bg-slate-950 px-4 py-2 rounded border border-slate-800 shadow-inner">
+                    <span class="text-xs text-slate-500 uppercase tracking-wider">Estimated Time</span>
+                    <div class="text-2xl font-bold text-indigo-400">Days 13-21</div>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
                 <!-- Step 1 -->
-                <div class="relative pl-8 border-l-2 border-amber-500">
-                    <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-amber-500"></div>
-                    <h4 class="font-bold text-lg mb-2">Day 13: The Code (Python)</h4>
-                    <p class="text-sm text-stone-300 mb-4">Do not draw the map manually. Use the `osmnx` library to
+                <div class="relative pl-8 border-l-2 border-indigo-500">
+                    <div
+                        class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]">
+                    </div>
+                    <h4 class="font-bold text-lg mb-2 text-indigo-300">Day 13: The Code (Python)</h4>
+                    <p class="text-sm text-slate-400 mb-4">Do not draw the map manually. Use the `osmnx` library to
                         fetch water polygons and `shapely` to generate depth rings.</p>
-                    <div class="bg-stone-900 p-3 rounded text-xs mono text-green-400 overflow-x-auto code-block">
+                    <div
+                        class="bg-slate-950 p-3 rounded text-xs mono text-emerald-400 overflow-x-auto code-block border border-slate-800">
                         import osmnx as ox
                         from shapely.geometry import Polygon
 
@@ -282,10 +436,10 @@
                 </div>
 
                 <!-- Step 2 -->
-                <div class="relative pl-8 border-l-2 border-stone-600">
-                    <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-stone-600"></div>
-                    <h4 class="font-bold text-lg mb-2">Days 14-18: The Fabrication</h4>
-                    <ul class="text-sm text-stone-300 space-y-2 list-disc ml-4">
+                <div class="relative pl-8 border-l-2 border-slate-700">
+                    <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-slate-700"></div>
+                    <h4 class="font-bold text-lg mb-2 text-slate-200">Days 14-18: The Fabrication</h4>
+                    <ul class="text-sm text-slate-400 space-y-2 list-disc ml-4">
                         <li><strong>Layer 1 (Deep):</strong> Laser cut Solid Blue Acrylic.</li>
                         <li><strong>Layer 2 (Shallow):</strong> Laser cut Light Blue Acrylic (Ring).</li>
                         <li><strong>Layer 3 (Land):</strong> Laser cut Walnut Plywood (Stained). Apply 3M adhesive to
@@ -296,10 +450,10 @@
                 </div>
 
                 <!-- Step 3 -->
-                <div class="relative pl-8 border-l-2 border-stone-600">
-                    <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-stone-600"></div>
-                    <h4 class="font-bold text-lg mb-2">Days 19-21: Assembly</h4>
-                    <p class="text-sm text-stone-300">
+                <div class="relative pl-8 border-l-2 border-slate-700">
+                    <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-slate-700"></div>
+                    <h4 class="font-bold text-lg mb-2 text-slate-200">Days 19-21: Assembly</h4>
+                    <p class="text-sm text-slate-400">
                         Peel and stick. The 3M adhesive turns the wood layer into a giant sticker.
                         Apply Gold Vinyl to the Wood.
                         Snap the sandwich into the 3D printed corners.
@@ -307,14 +461,23 @@
                     </p>
                 </div>
             </div>
+
+            <div class="mt-8 border-t border-stone-700 pt-8">
+                <h4 class="font-bold text-amber-500 mb-4">Capstone Walkthrough</h4>
+                <div class="video-container">
+                    <iframe src="https://www.youtube.com/embed/5X6P2gSuoQc" title="Bathymetric Map Tutorial"
+                        allowfullscreen></iframe>
+                </div>
+            </div>
+            </div>
         </section>
 
         <!-- Resources Footer -->
-        <footer class="border-t border-stone-300 pt-8 pb-12">
-            <h3 class="font-bold text-stone-800 mb-4">Resources & Shopping List</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-sm text-stone-600">
+        <footer class="border-t border-slate-800 pt-8 pb-12 mt-12">
+            <h3 class="font-bold text-slate-200 mb-4">Resources & Shopping List</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-sm text-slate-500">
                 <div>
-                    <strong class="block text-stone-900 mb-2">Consumables</strong>
+                    <strong class="block text-slate-300 mb-2">Consumables</strong>
                     <ul class="space-y-1">
                         <li>3M 467MP Adhesive Sheets (12x12)</li>
                         <li>Basswood Plywood (3mm)</li>
@@ -323,7 +486,7 @@
                     </ul>
                 </div>
                 <div>
-                    <strong class="block text-stone-900 mb-2">Finishing</strong>
+                    <strong class="block text-slate-300 mb-2">Finishing</strong>
                     <ul class="space-y-1">
                         <li>Rust-Oleum Matte Black 2X</li>
                         <li>Rust-Oleum Clear Matte</li>
@@ -332,7 +495,7 @@
                     </ul>
                 </div>
                 <div>
-                    <strong class="block text-stone-900 mb-2">Tools</strong>
+                    <strong class="block text-slate-300 mb-2">Tools</strong>
                     <ul class="space-y-1">
                         <li>Deburring Tool</li>
                         <li>Digital Calipers</li>
@@ -341,11 +504,14 @@
                     </ul>
                 </div>
                 <div>
-                    <strong class="block text-stone-900 mb-2">Links</strong>
+                    <strong class="block text-slate-300 mb-2">Links</strong>
                     <ul class="space-y-1">
-                        <li><a href="#" class="text-blue-600 hover:underline">Vectorizer.ai</a></li>
-                        <li><a href="#" class="text-blue-600 hover:underline">SnazzyMaps</a></li>
-                        <li><a href="#" class="text-blue-600 hover:underline">MakerWorld</a></li>
+                        <li><a href="#" class="text-indigo-400 hover:text-indigo-300 hover:underline">Vectorizer.ai</a>
+                        </li>
+                        <li><a href="#" class="text-indigo-400 hover:text-indigo-300 hover:underline">SnazzyMaps</a>
+                        </li>
+                        <li><a href="#" class="text-indigo-400 hover:text-indigo-300 hover:underline">MakerWorld</a>
+                        </li>
                     </ul>
                 </div>
             </div>
@@ -361,6 +527,7 @@
                 title: "Parametric Storage Bin",
                 tools: "Fusion 360 + 3D Printer",
                 desc: "A bin that fits perfectly in your specific drawer.",
+                videoId: "gs4SNZH0aWA",
                 steps: [
                     "Fusion 360: Open 'Modify > Change Parameters'.",
                     "Create User Parameters: `Width`, `Depth`, `Height` (measured from your drawer).",
@@ -375,6 +542,7 @@
                 title: "Dad Brand Sticker Pack",
                 tools: "AI (DALL-E) + Cricut",
                 desc: "Custom Gold Mirror stickers for your gear.",
+                videoId: "iI72eJbTmWk",
                 steps: [
                     "Prompt AI: 'Vector logo, geometric wolf head, thick black lines, white background, flat style'.",
                     "Run output through Vectorizer.ai (or Inkscape Trace Bitmap).",
@@ -389,6 +557,7 @@
                 title: "Kids' Currency (AMS Coins)",
                 tools: "Bambu AMS + Fusion 360",
                 desc: "Dual-color reward tokens.",
+                videoId: "q3pv55dV134",
                 steps: [
                     "Fusion: Cylinder (30mm x 3mm). Extrude a number '5' (1mm high) on top.",
                     "Bambu Studio: Import STL.",
@@ -403,6 +572,7 @@
                 title: "Faux-Mirror Bag Tags",
                 tools: "Laser (Wood) + Cricut (Mirror Vinyl)",
                 desc: "High-end tags that defy Diode limitations.",
+                videoId: "vfqorXRTOrE",
                 steps: [
                     "LightBurn: Type name (e.g., 'SOPHIA').",
                     "Offset Tool: Create a 3mm 'Outward' offset bubble.",
@@ -418,6 +588,7 @@
                 title: "Friction Fit Tester",
                 tools: "3D Print + Laser",
                 desc: "Calibrating the tolerance between your machines.",
+                videoId: "leN_jFSs5y0",
                 steps: [
                     "Fusion: Model a 20mm x 20mm x 10mm block. Print it.",
                     "LightBurn: Draw five 20mm squares.",
@@ -432,6 +603,7 @@
                 title: "The Parallax Shadow Box",
                 tools: "Laser (Layers)",
                 desc: "A layered scene creating depth.",
+                videoId: "W-SUXHm9chQ",
                 steps: [
                     "AI/Asset: Get a vector landscape (Mountains/Trees).",
                     "LightBurn: Duplicate the image 3 times.",
@@ -448,6 +620,7 @@
                 title: "Voronoi Slate Coaster",
                 tools: "Python Script + Laser",
                 desc: "Generating organic math patterns.",
+                videoId: "1cyI2FlXTJU",
                 steps: [
                     "Python: Use `scipy.spatial.Voronoi` to generate random cell patterns.",
                     "Export: Save lines as SVG/DXF.",
@@ -462,6 +635,7 @@
                 title: "Wife's Gift: The 'Sticker' Sign",
                 tools: "Laser (Acrylic) + 3M Tape",
                 desc: "Professional Acrylic assembly without glue.",
+                videoId: "99LKMkiwT0c",
                 steps: [
                     "Prep: Apply 3M 467MP adhesive sheet to the BACK of a White Acrylic sheet.",
                     "Laser: Cut the text 'The Kozaks' (Mirror? NO, cut from front through masking).",
@@ -476,6 +650,7 @@
                 title: "The Impossible Mount",
                 tools: "3D Print (Pause at Height)",
                 desc: "Embedding laser parts inside 3D prints.",
+                videoId: "G36ppHfMdQc",
                 steps: [
                     "Fusion: Design a wall hook with a hollow internal slot.",
                     "Laser: Cut a rubber/TPU pad that fits the slot.",
@@ -495,32 +670,39 @@
             const container = document.getElementById('project-container');
             projects.forEach((proj, index) => {
                 const card = document.createElement('div');
-                card.className = "bg-white rounded-lg shadow-sm border border-stone-200 overflow-hidden";
+                card.className = "bg-slate-900/50 rounded-lg shadow-lg border border-slate-800 overflow-hidden backdrop-blur-sm";
                 card.innerHTML = `
-                    <div class="p-5 cursor-pointer flex justify-between items-center bg-stone-50 hover:bg-stone-100 transition-colors" onclick="toggleDetails('proj-${index}')">
+                    <div class="p-5 cursor-pointer flex justify-between items-center bg-slate-900/30 hover:bg-slate-800/50 transition-colors" onclick="toggleDetails('proj-${index}')">
                         <div class="flex items-center">
-                            <div class="bg-stone-800 text-amber-500 font-bold w-12 h-12 flex items-center justify-center rounded-md mr-4 text-xl shadow-sm">
+                            <div class="bg-slate-950 text-indigo-400 border border-slate-800 font-bold w-12 h-12 flex items-center justify-center rounded-md mr-4 text-xl shadow-inner">
                                 ${proj.day}
                             </div>
                             <div>
-                                <h3 class="font-bold text-stone-800">${proj.title}</h3>
-                                <p class="text-xs text-stone-500 font-mono">${proj.tools}</p>
+                                <h3 class="font-bold text-slate-200">${proj.title}</h3>
+                                <p class="text-xs text-slate-500 font-mono">${proj.tools}</p>
                             </div>
                         </div>
-                        <div class="text-stone-400">
+                        <div class="text-slate-600">
                             <svg class="w-6 h-6 transform transition-transform" id="icon-proj-${index}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                         </div>
                     </div>
-                    <div id="proj-${index}" class="hidden border-t border-stone-200">
-                        <div class="p-6 bg-white">
-                            <p class="text-stone-700 italic mb-4 border-l-4 border-blue-400 pl-3 bg-blue-50 py-2 rounded-r">${proj.desc}</p>
+                    <div id="proj-${index}" class="hidden border-t border-slate-800">
+                        <div class="p-6 bg-slate-900/30">
+                            <p class="text-slate-400 italic mb-4 border-l-4 border-indigo-500 pl-3 bg-indigo-950/20 py-2 rounded-r">${proj.desc}</p>
                             
-                            <h4 class="font-bold text-sm text-stone-900 mb-2 uppercase tracking-wide">The Protocol</h4>
-                            <ol class="list-decimal list-inside space-y-2 text-sm text-stone-600 mb-6 font-mono">
+                            <div class="mb-4">
+                                <h4 class="font-bold text-sm text-slate-300 mb-2 uppercase tracking-wide">Tutorial</h4>
+                                <div class="video-container">
+                                    <iframe src="https://www.youtube.com/embed/${proj.videoId}" title="${proj.title} Tutorial" allowfullscreen></iframe>
+                                </div>
+                            </div>
+                            
+                            <h4 class="font-bold text-sm text-slate-300 mb-2 uppercase tracking-wide">The Protocol</h4>
+                            <ol class="list-decimal list-inside space-y-2 text-sm text-slate-400 mb-6 font-mono">
                                 ${proj.steps.map(step => `<li class="p-1">${step}</li>`).join('')}
                             </ol>
                             
-                            <div class="bg-stone-900 text-amber-500 p-4 rounded text-sm font-mono flex items-start shadow-inner">
+                            <div class="bg-slate-950 text-indigo-400 border border-slate-800 p-4 rounded text-sm font-mono flex items-start shadow-inner">
                                 <span class="mr-2 text-xl">⚡</span>
                                 <span>${proj.secret}</span>
                             </div>
@@ -539,18 +721,18 @@
                         {
                             label: 'Manual "Tinkering" Effort',
                             data: [100, 80, 40, 20, 5],
-                            borderColor: '#78716c', // Stone 500
+                            borderColor: '#64748b', // Slate 500
                             tension: 0.4,
                             borderDash: [5, 5]
                         },
                         {
                             label: 'Automated/Systemic Output',
                             data: [0, 20, 60, 85, 100],
-                            borderColor: '#f59e0b', // Amber 500
-                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                            borderColor: '#6366f1', // Indigo 500
+                            backgroundColor: 'rgba(99, 102, 241, 0.1)',
                             fill: true,
                             tension: 0.4,
-                            pointBackgroundColor: '#f59e0b'
+                            pointBackgroundColor: '#6366f1'
                         }
                     ]
                 },
@@ -582,7 +764,105 @@
 
             // Set current day (simulation)
             document.getElementById('current-day-display').innerText = "1";
+
+            // Add Event Listeners for Checkboxes
+            const checkboxes = document.querySelectorAll('.step-check');
+            checkboxes.forEach(box => {
+                box.addEventListener('change', (e) => {
+                    if (e.target.checked) {
+                        triggerConfetti();
+                        checkDayCompletion(e.target.id);
+                    }
+                });
+            });
         });
+
+        // Confetti Trigger Function
+        function triggerConfetti() {
+            var duration = 3 * 1000;
+            var animationEnd = Date.now() + duration;
+            var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+            var random = function (min, max) { return Math.random() * (max - min) + min; };
+
+            var interval = setInterval(function () {
+                var timeLeft = animationEnd - Date.now();
+
+                if (timeLeft <= 0) {
+                    return clearInterval(interval);
+                }
+
+                var particleCount = 50 * (timeLeft / duration);
+                // since particles fall down, start a bit higher than random
+                confetti({ ...defaults, particleCount, origin: { x: random(0.1, 0.3), y: Math.random() - 0.2 } });
+                confetti({ ...defaults, particleCount, origin: { x: random(0.7, 0.9), y: Math.random() - 0.2 } });
+            }, 250);
+        }
+
+        // Fire & Day Done Logic
+        function triggerDayComplete() {
+            const overlay = document.getElementById('day-done-overlay');
+            const fireContainer = document.getElementById('fire-visuals');
+
+            // Show overlay
+            overlay.classList.add('active');
+
+            // Generate Fire Particles
+            // Clear existing
+            fireContainer.innerHTML = '';
+
+            // Create particles
+            const particleCount = 200;
+            for (let i = 0; i < particleCount; i++) {
+                const p = document.createElement('div');
+                p.classList.add('fire-particle');
+
+                // Random properties
+                const size = Math.random() * 60 + 20; // 20px - 80px
+                const left = Math.random() * 100; // 0% - 100%
+                const duration = Math.random() * 1 + 1; // 1s - 2s
+                const delay = Math.random() * 2; // 0s - 2s
+                const drift = (Math.random() - 0.5) * 200 + 'px'; // -100px to 100px
+
+                p.style.width = `${size}px`;
+                p.style.height = `${size}px`;
+                p.style.left = `${left}%`;
+                p.style.animationDuration = `${duration}s`;
+                p.style.animationDelay = `${delay}s`;
+                p.style.setProperty('--drift', drift);
+
+                fireContainer.appendChild(p);
+            }
+
+            // Hide after 5 seconds
+            setTimeout(() => {
+                overlay.classList.remove('active');
+                // Clean up particles after fade out to save memory
+                setTimeout(() => {
+                    fireContainer.innerHTML = '';
+                }, 1000);
+            }, 5000);
+        }
+
+        function checkDayCompletion(checkboxId) {
+            // ID format: d1-1 (Day 1, Step 1)
+            const parts = checkboxId.split('-');
+            const dayPrefix = parts[0]; // e.g., "d1"
+
+            if (!dayPrefix) return;
+
+            // Find all checkboxes for this day
+            // We look for checkboxes with IDs starting with "d{X}-"
+            // Note: querySelectorAll needs specific escaping or logic if IDs are complex, 
+            // but here simple attribute selector works best: [id^="d1-"]
+            const dayCheckboxes = document.querySelectorAll(`input[id^="${dayPrefix}-"]`);
+
+            const allChecked = Array.from(dayCheckboxes).every(cb => cb.checked);
+
+            if (allChecked && dayCheckboxes.length > 0) {
+                triggerDayComplete();
+            }
+        }
 
         // Interactive Functions
         function toggleDetails(id) {
@@ -603,6 +883,13 @@
             alert("Protocol Reset. Good luck, Maker.");
         }
     </script>
+    <!-- Day Done Overlay -->
+    <div id="day-done-overlay">
+        <div class="fire-container" id="fire-visuals">
+            <!-- Fire particles injected here -->
+        </div>
+        <div class="fire-text">DAY DONE!</div>
+    </div>
 </body>
 
 </html>
