@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The 10x Maker Boot Camp: Code-to-Reality Protocol</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;800&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f5f5f4;
+            /* Stone 100 - Warm Neutral Background */
+            color: #1c1917;
+            /* Stone 900 */
+        }
+
+        h1,
+        h2,
+        h3,
+        .mono {
+            font-family: 'JetBrains+Mono', monospace;
+        }
+
+        /* Custom Chart Container Styling */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+
+        /* Custom Scrollbar for code blocks */
+        .code-block::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+        }
+
+        .code-block::-webkit-scrollbar-track {
+            background: #292524;
+        }
+
+        .code-block::-webkit-scrollbar-thumb {
+            background: #f59e0b;
+            /* Amber 500 */
+            border-radius: 4px;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .step-check:checked+label {
+            text-decoration: line-through;
+            color: #a8a29e;
+        }
+    </style>
+</head>
+
+<body class="antialiased min-h-screen flex flex-col">
+
+    <!-- REQUIRED PLACEHOLDERS -->
+    <!-- Chosen Palette: Warm Engineering (Stone/Warm Grey base with Amber/Orange accents for 'Construction/Warning' vibe and deep Slate for text) -->
+    <!-- Application Structure Plan: Dashboard-style SPA. 
+         1. Header: Status and Motivation.
+         2. The Stack: Inventory of Tools/Software.
+         3. Skill Trajectory (Chart): Visualizing the learning curve.
+         4. The Curriculum (Main Interactive Section): 
+            - Phase 1: Infrastructure (Days 1-3)
+            - Phase 2: The Sprint (Days 4-12) - Expandable cards with Step-by-Step guides.
+            - Phase 3: The Finale (Days 13-21) - The Deep Lake Project.
+         5. Resources: Shopping list and code snippets.
+         User flow is linear through days, but allows jumping to specific projects. 
+    -->
+    <!-- Visualization & Content Choices:
+         - Skill Chart (Line Chart): Shows the shift from "Manual" to "Automated" effort over time.
+         - Project Cards: Interactive toggle elements containing the "Recipe" for each day.
+         - Code Blocks: Pre-formatted text for the Python scripts (Voronoi/Lake Data).
+         - Progress Indicators: Visual checkmarks to gamify the boot camp.
+         NO SVG. NO Mermaid.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <!-- Header -->
+    <header class="bg-stone-900 text-stone-100 border-b-4 border-amber-500 sticky top-0 z-50 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <div>
+                <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-amber-500">10x MAKER PROTOCOL</h1>
+                <p class="text-xs sm:text-sm text-stone-400 mono">STATUS: SABBATICAL MODE // DAY <span
+                        id="current-day-display">0</span></p>
+            </div>
+            <div class="flex space-x-4">
+                <button onclick="resetProgress()" class="text-xs text-stone-500 hover:text-red-400 underline">Reset
+                    Protocol</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full space-y-12">
+
+        <!-- Intro Section -->
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-2 space-y-4">
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-stone-200">
+                    <h2 class="text-2xl font-bold text-stone-800 mb-2">Objective: Zero-Friction Fabrication</h2>
+                    <p class="text-stone-600 mb-4">
+                        You are an engineer. You don't "tinker" endlessly; you deploy systems. This 21-day boot camp is
+                        designed to build your
+                        <strong>Manufacturing Stack</strong>. By Day 21, you will not just know how to use your
+                        tools—you will have a workflow
+                        that turns code into physical objects in minutes.
+                    </p>
+                    <div class="p-4 bg-amber-50 border-l-4 border-amber-500 text-amber-900 text-sm">
+                        <span class="font-bold">CRITICAL SAFETY PROTOCOL:</span> Do NOT attempt to laser cut Mirror
+                        Acrylic with your Falcon 2 (Diode Laser).
+                        The blue light passes through the clear layer, reflects off the mirror backing, and can destroy
+                        your laser module.
+                        We will use the <strong>"Faux Mirror" Hybrid Method</strong> (Wood/Black Acrylic + Mirror Vinyl)
+                        exclusively.
+                    </div>
+                </div>
+
+                <!-- The Stack Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="bg-stone-800 text-stone-100 p-5 rounded-lg shadow-sm">
+                        <h3 class="text-amber-500 font-bold mono mb-3">HARDWARE STACK</h3>
+                        <ul class="space-y-2 text-sm">
+                            <li class="flex items-center"><span class="mr-2">🖨️</span> Bambu Lab (AMS enabled)</li>
+                            <li class="flex items-center"><span class="mr-2">🔫</span> Creality Falcon 2 (40W Diode)
+                            </li>
+                            <li class="flex items-center"><span class="mr-2">✂️</span> Cricut Maker 3</li>
+                            <li class="flex items-center"><span class="mr-2">📏</span> Mitutoyo Calipers</li>
+                        </ul>
+                    </div>
+                    <div class="bg-stone-800 text-stone-100 p-5 rounded-lg shadow-sm">
+                        <h3 class="text-blue-400 font-bold mono mb-3">SOFTWARE STACK</h3>
+                        <ul class="space-y-2 text-sm">
+                            <li class="flex items-center"><span class="mr-2">💻</span> Fusion 360 (Parametric CAD)</li>
+                            <li class="flex items-center"><span class="mr-2">🔥</span> LightBurn (Laser Control)</li>
+                            <li class="flex items-center"><span class="mr-2">🐍</span> Python (VS Code + libraries)</li>
+                            <li class="flex items-center"><span class="mr-2">🧠</span> ChatGPT/Midjourney (Asset Gen)
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart Section -->
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-stone-200 flex flex-col justify-between">
+                <div>
+                    <h3 class="text-lg font-bold text-stone-800 mb-2">Effort vs. Output</h3>
+                    <p class="text-xs text-stone-500 mb-4">Transitioning from manual labor to automated scripts.</p>
+                </div>
+                <div class="chart-container">
+                    <canvas id="skillChart"></canvas>
+                </div>
+                <div class="mt-4 text-center">
+                    <p class="text-xs mono text-stone-400">PROJECTED TRAJECTORY</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Phase 1: Infrastructure -->
+        <section>
+            <div class="flex items-center mb-6">
+                <div class="bg-stone-800 text-white font-bold px-3 py-1 rounded mr-3 mono">PHASE 1</div>
+                <h2 class="text-2xl font-bold text-stone-800">The Infrastructure (Days 1-3)</h2>
+            </div>
+            <p class="text-stone-600 mb-6 max-w-3xl">
+                Before making, we must prepare the environment. Friction kills momentum. If you have to search for a
+                tool or guess a setting, you've already failed.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Day 1 -->
+                <div class="bg-white p-6 rounded-lg border-t-4 border-blue-500 shadow-sm card-hover">
+                    <h3 class="font-bold text-lg mb-2">Day 1: The Digital Arsenal</h3>
+                    <p class="text-sm text-stone-600 mb-4">Install the "Stack" and organize your file system.</p>
+                    <ul class="text-sm space-y-2 text-stone-700">
+                        <li class="flex items-start"><input type="checkbox" class="mt-1 mr-2 step-check"
+                                id="d1-1"><label for="d1-1">Install Fusion 360 & LightBurn.</label></li>
+                        <li class="flex items-start"><input type="checkbox" class="mt-1 mr-2 step-check"
+                                id="d1-2"><label for="d1-2">Setup Python: `pip install build123d ezdxf osmnx`.</label>
+                        </li>
+                        <li class="flex items-start"><input type="checkbox" class="mt-1 mr-2 step-check"
+                                id="d1-3"><label for="d1-3">Create folders: `00_Inbox`, `01_Assets`, `02_GCODE`.</label>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Day 2 -->
+                <div class="bg-white p-6 rounded-lg border-t-4 border-amber-500 shadow-sm card-hover">
+                    <h3 class="font-bold text-lg mb-2">Day 2: Physical "Mise en Place"</h3>
+                    <p class="text-sm text-stone-600 mb-4">Clear the workspace. If it's not a tool, bin it.</p>
+                    <ul class="text-sm space-y-2 text-stone-700">
+                        <li class="flex items-start"><input type="checkbox" class="mt-1 mr-2 step-check"
+                                id="d2-1"><label for="d2-1">Buy "Dump Bin" for desk clutter.</label></li>
+                        <li class="flex items-start"><input type="checkbox" class="mt-1 mr-2 step-check"
+                                id="d2-2"><label for="d2-2">Unbox & Calibrate Cricut Maker 3.</label></li>
+                        <li class="flex items-start"><input type="checkbox" class="mt-1 mr-2 step-check"
+                                id="d2-3"><label for="d2-3">Verify venting for Falcon 2.</label></li>
+                    </ul>
+                </div>
+
+                <!-- Day 3 -->
+                <div class="bg-white p-6 rounded-lg border-t-4 border-red-500 shadow-sm card-hover">
+                    <h3 class="font-bold text-lg mb-2">Day 3: The "Truth" Data</h3>
+                    <p class="text-sm text-stone-600 mb-4">Create physical reference cards. Stop guessing.</p>
+                    <ul class="text-sm space-y-2 text-stone-700">
+                        <li class="flex items-start"><input type="checkbox" class="mt-1 mr-2 step-check"
+                                id="d3-1"><label for="d3-1">Laser: Run Material Test (Basswood/Acrylic).</label></li>
+                        <li class="flex items-start"><input type="checkbox" class="mt-1 mr-2 step-check"
+                                id="d3-2"><label for="d3-2">Cricut: Test cut Gold Mirror Vinyl (Pressure check).</label>
+                        </li>
+                        <li class="flex items-start"><input type="checkbox" class="mt-1 mr-2 step-check"
+                                id="d3-3"><label for="d3-3">Hang test cards on the wall.</label></li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Phase 2: The Projects -->
+        <section id="phase2">
+            <div class="flex items-center mb-6">
+                <div class="bg-stone-800 text-white font-bold px-3 py-1 rounded mr-3 mono">PHASE 2</div>
+                <h2 class="text-2xl font-bold text-stone-800">The Sprint (Days 4-12)</h2>
+            </div>
+            <p class="text-stone-600 mb-6 max-w-3xl">
+                The core curriculum. Each day introduces a new integration or software concept. Click a project to see
+                the "Recipe."
+            </p>
+
+            <div class="space-y-4" id="project-container">
+                <!-- Projects will be injected here via JS -->
+            </div>
+        </section>
+
+        <!-- Phase 3: The Finale -->
+        <section class="bg-stone-800 text-stone-100 rounded-xl p-8 shadow-xl border border-stone-700">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+                <div>
+                    <h2 class="text-3xl font-bold text-amber-500 mb-2">PHASE 3: THE CAPSTONE</h2>
+                    <h3 class="text-xl font-semibold">Project: The Generative Lake Shadowbox</h3>
+                    <p class="text-stone-400 text-sm mono">TARGET: Blakeslee, PA // TECH: Python + Laser + Print +
+                        Cricut</p>
+                </div>
+                <div class="mt-4 md:mt-0 bg-stone-900 px-4 py-2 rounded border border-stone-600">
+                    <span class="text-xs text-stone-500 uppercase tracking-wider">Estimated Time</span>
+                    <div class="text-2xl font-bold">Days 13-21</div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Step 1 -->
+                <div class="relative pl-8 border-l-2 border-amber-500">
+                    <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-amber-500"></div>
+                    <h4 class="font-bold text-lg mb-2">Day 13: The Code (Python)</h4>
+                    <p class="text-sm text-stone-300 mb-4">Do not draw the map manually. Use the `osmnx` library to
+                        fetch water polygons and `shapely` to generate depth rings.</p>
+                    <div class="bg-stone-900 p-3 rounded text-xs mono text-green-400 overflow-x-auto code-block">
+                        import osmnx as ox
+                        from shapely.geometry import Polygon
+
+                        # 1. Fetch Water Data
+                        place = "Blakeslee, Pennsylvania, USA"
+                        water = ox.geometries_from_place(place, tags={'natural': 'water'})
+
+                        # 2. Create Depth Rings (Buffer)
+                        # Negative buffer simulates depth
+                        deep_water = water.buffer(-0.001)
+                        abyss = water.buffer(-0.002)
+
+                        # 3. Export to DXF with ezdxf...
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="relative pl-8 border-l-2 border-stone-600">
+                    <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-stone-600"></div>
+                    <h4 class="font-bold text-lg mb-2">Days 14-18: The Fabrication</h4>
+                    <ul class="text-sm text-stone-300 space-y-2 list-disc ml-4">
+                        <li><strong>Layer 1 (Deep):</strong> Laser cut Solid Blue Acrylic.</li>
+                        <li><strong>Layer 2 (Shallow):</strong> Laser cut Light Blue Acrylic (Ring).</li>
+                        <li><strong>Layer 3 (Land):</strong> Laser cut Walnut Plywood (Stained). Apply 3M adhesive to
+                            back BEFORE cutting.</li>
+                        <li><strong>Layer 4 (Data):</strong> Cricut Cut Roads/Text from Gold Mirror Vinyl.</li>
+                        <li><strong>Frame:</strong> 3D Print "Click-Lock" corners in Matte Black PLA.</li>
+                    </ul>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="relative pl-8 border-l-2 border-stone-600">
+                    <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-stone-600"></div>
+                    <h4 class="font-bold text-lg mb-2">Days 19-21: Assembly</h4>
+                    <p class="text-sm text-stone-300">
+                        Peel and stick. The 3M adhesive turns the wood layer into a giant sticker.
+                        Apply Gold Vinyl to the Wood.
+                        Snap the sandwich into the 3D printed corners.
+                        Hang it on the wall.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Resources Footer -->
+        <footer class="border-t border-stone-300 pt-8 pb-12">
+            <h3 class="font-bold text-stone-800 mb-4">Resources & Shopping List</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-sm text-stone-600">
+                <div>
+                    <strong class="block text-stone-900 mb-2">Consumables</strong>
+                    <ul class="space-y-1">
+                        <li>3M 467MP Adhesive Sheets (12x12)</li>
+                        <li>Basswood Plywood (3mm)</li>
+                        <li>Black Cast Acrylic (3mm)</li>
+                        <li>Cricut Permanent Gold Mirror Vinyl</li>
+                    </ul>
+                </div>
+                <div>
+                    <strong class="block text-stone-900 mb-2">Finishing</strong>
+                    <ul class="space-y-1">
+                        <li>Rust-Oleum Matte Black 2X</li>
+                        <li>Rust-Oleum Clear Matte</li>
+                        <li>General Finishes Gel Stain (Walnut)</li>
+                        <li>Transfer Tape</li>
+                    </ul>
+                </div>
+                <div>
+                    <strong class="block text-stone-900 mb-2">Tools</strong>
+                    <ul class="space-y-1">
+                        <li>Deburring Tool</li>
+                        <li>Digital Calipers</li>
+                        <li>Sanding Sponges (220 Grit)</li>
+                        <li>Isopropyl Alcohol (Cleaning)</li>
+                    </ul>
+                </div>
+                <div>
+                    <strong class="block text-stone-900 mb-2">Links</strong>
+                    <ul class="space-y-1">
+                        <li><a href="#" class="text-blue-600 hover:underline">Vectorizer.ai</a></li>
+                        <li><a href="#" class="text-blue-600 hover:underline">SnazzyMaps</a></li>
+                        <li><a href="#" class="text-blue-600 hover:underline">MakerWorld</a></li>
+                    </ul>
+                </div>
+            </div>
+        </footer>
+
+    </main>
+
+    <script>
+        // Project Data Configuration
+        const projects = [
+            {
+                day: 4,
+                title: "Parametric Storage Bin",
+                tools: "Fusion 360 + 3D Printer",
+                desc: "A bin that fits perfectly in your specific drawer.",
+                steps: [
+                    "Fusion 360: Open 'Modify > Change Parameters'.",
+                    "Create User Parameters: `Width`, `Depth`, `Height` (measured from your drawer).",
+                    "Sketch a center rectangle using these parameters.",
+                    "Extrude to `Height`. Shell to 2mm thickness.",
+                    "Change one parameter to test flexibility. Export STL -> Print."
+                ],
+                secret: "The 10x Secret: Save this file as 'MASTER_BIN_TEMPLATE'. Never model a bin again, just change the numbers and hit export."
+            },
+            {
+                day: 5,
+                title: "Dad Brand Sticker Pack",
+                tools: "AI (DALL-E) + Cricut",
+                desc: "Custom Gold Mirror stickers for your gear.",
+                steps: [
+                    "Prompt AI: 'Vector logo, geometric wolf head, thick black lines, white background, flat style'.",
+                    "Run output through Vectorizer.ai (or Inkscape Trace Bitmap).",
+                    "Cricut Design Space: Upload SVG.",
+                    "Load Gold Mirror Vinyl. Select 'Premium Holographic Vinyl' setting.",
+                    "Cut, Weed, Transfer to your laptop/water bottle."
+                ],
+                secret: "The 10x Secret: Bypassing Cricut's design tools entirely. AI does the art, Vectorizer cleans it, Cricut just cuts."
+            },
+            {
+                day: 6,
+                title: "Kids' Currency (AMS Coins)",
+                tools: "Bambu AMS + Fusion 360",
+                desc: "Dual-color reward tokens.",
+                steps: [
+                    "Fusion: Cylinder (30mm x 3mm). Extrude a number '5' (1mm high) on top.",
+                    "Bambu Studio: Import STL.",
+                    "Color Painting: Use the 'Fill' tool. Click the '5' to make it Silk Gold. Base is Black.",
+                    "Right Click -> Clone -> Create 10 copies.",
+                    "Print face down on textured plate for cool finish (optional)."
+                ],
+                secret: "The 10x Secret: The 'Fill' tool in Bambu Studio saves you from having to model separate bodies for different colors."
+            },
+            {
+                day: 7,
+                title: "Faux-Mirror Bag Tags",
+                tools: "Laser (Wood) + Cricut (Mirror Vinyl)",
+                desc: "High-end tags that defy Diode limitations.",
+                steps: [
+                    "LightBurn: Type name (e.g., 'SOPHIA').",
+                    "Offset Tool: Create a 3mm 'Outward' offset bubble.",
+                    "Laser: Cut the BUBBLE out of Basswood.",
+                    "Cricut: Cut the TEXT out of Gold Mirror Vinyl.",
+                    "Assembly: Transfer tape the text onto the wood.",
+                    "Finish: Add a keyring."
+                ],
+                secret: "The 10x Secret: Mixed Media. Wood provides the strength/thickness that vinyl lacks, Vinyl provides the mirror finish the laser can't cut."
+            },
+            {
+                day: 8,
+                title: "Friction Fit Tester",
+                tools: "3D Print + Laser",
+                desc: "Calibrating the tolerance between your machines.",
+                steps: [
+                    "Fusion: Model a 20mm x 20mm x 10mm block. Print it.",
+                    "LightBurn: Draw five 20mm squares.",
+                    "Kerf Adjustment: Set 'Kerf Offset' on each square: 0.0, 0.05, 0.1, 0.15, 0.2mm.",
+                    "Laser Cut: Cut from Black Acrylic.",
+                    "Test: Which hole does the printed block fit into perfectly? Write that number down."
+                ],
+                secret: "The 10x Secret: Knowing your 'System Tolerance' means your multi-part assemblies work on the first try."
+            },
+            {
+                day: 9,
+                title: "The Parallax Shadow Box",
+                tools: "Laser (Layers)",
+                desc: "A layered scene creating depth.",
+                steps: [
+                    "AI/Asset: Get a vector landscape (Mountains/Trees).",
+                    "LightBurn: Duplicate the image 3 times.",
+                    "Layer 1 (Front): Keep only the bottom/foreground trees.",
+                    "Layer 2 (Mid): Keep the mountains.",
+                    "Layer 3 (Back): A solid circle (Moon).",
+                    "Cut: All 3 layers from Basswood.",
+                    "Assembly: Paint L1 Black, L2 Grey, L3 White. Stack with foam tape spacers."
+                ],
+                secret: "The 10x Secret: Color + Depth = Expensive Look. Raw wood looks cheap; painted layers look designed."
+            },
+            {
+                day: 10,
+                title: "Voronoi Slate Coaster",
+                tools: "Python Script + Laser",
+                desc: "Generating organic math patterns.",
+                steps: [
+                    "Python: Use `scipy.spatial.Voronoi` to generate random cell patterns.",
+                    "Export: Save lines as SVG/DXF.",
+                    "LightBurn: Import pattern. Set layer to 'Fill' (Engrave).",
+                    "Material: Slate Coaster. (High Power, Med Speed).",
+                    "Finish: Wash coaster to reveal white contrast."
+                ],
+                secret: "The 10x Secret: You couldn't draw this by hand in 100 years. Code does it in 1 second."
+            },
+            {
+                day: 11,
+                title: "Wife's Gift: The 'Sticker' Sign",
+                tools: "Laser (Acrylic) + 3M Tape",
+                desc: "Professional Acrylic assembly without glue.",
+                steps: [
+                    "Prep: Apply 3M 467MP adhesive sheet to the BACK of a White Acrylic sheet.",
+                    "Laser: Cut the text 'The Kozaks' (Mirror? NO, cut from front through masking).",
+                    "Backing: Cut a Walnut Wood rectangle/offset.",
+                    "Assembly: Peel the 3M backing off the acrylic letters (now they are stickers).",
+                    "Press onto Walnut."
+                ],
+                secret: "The 10x Secret: 3M Adhesive Sheets. No glue squeeze out. Instant bond. This is how industry pros do it."
+            },
+            {
+                day: 12,
+                title: "The Impossible Mount",
+                tools: "3D Print (Pause at Height)",
+                desc: "Embedding laser parts inside 3D prints.",
+                steps: [
+                    "Fusion: Design a wall hook with a hollow internal slot.",
+                    "Laser: Cut a rubber/TPU pad that fits the slot.",
+                    "Bambu Studio: Slice. Right click slider -> 'Add Pause' at layer 50 (top of slot).",
+                    "Print: Printer pauses. Drop rubber in. Resume.",
+                    "Result: A hard hook with a soft internal grip."
+                ],
+                secret: "The 10x Secret: Hybrid fabrication allows material properties (soft grip + hard shell) that 3D printing alone cannot do."
+            }
+        ];
+
+        // Chart Initialization
+        document.addEventListener('DOMContentLoaded', () => {
+            const ctx = document.getElementById('skillChart').getContext('2d');
+
+            // Generate Project Cards
+            const container = document.getElementById('project-container');
+            projects.forEach((proj, index) => {
+                const card = document.createElement('div');
+                card.className = "bg-white rounded-lg shadow-sm border border-stone-200 overflow-hidden";
+                card.innerHTML = `
+                    <div class="p-5 cursor-pointer flex justify-between items-center bg-stone-50 hover:bg-stone-100 transition-colors" onclick="toggleDetails('proj-${index}')">
+                        <div class="flex items-center">
+                            <div class="bg-stone-800 text-amber-500 font-bold w-12 h-12 flex items-center justify-center rounded-md mr-4 text-xl shadow-sm">
+                                ${proj.day}
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-stone-800">${proj.title}</h3>
+                                <p class="text-xs text-stone-500 font-mono">${proj.tools}</p>
+                            </div>
+                        </div>
+                        <div class="text-stone-400">
+                            <svg class="w-6 h-6 transform transition-transform" id="icon-proj-${index}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                    </div>
+                    <div id="proj-${index}" class="hidden border-t border-stone-200">
+                        <div class="p-6 bg-white">
+                            <p class="text-stone-700 italic mb-4 border-l-4 border-blue-400 pl-3 bg-blue-50 py-2 rounded-r">${proj.desc}</p>
+                            
+                            <h4 class="font-bold text-sm text-stone-900 mb-2 uppercase tracking-wide">The Protocol</h4>
+                            <ol class="list-decimal list-inside space-y-2 text-sm text-stone-600 mb-6 font-mono">
+                                ${proj.steps.map(step => `<li class="p-1">${step}</li>`).join('')}
+                            </ol>
+                            
+                            <div class="bg-stone-900 text-amber-500 p-4 rounded text-sm font-mono flex items-start shadow-inner">
+                                <span class="mr-2 text-xl">⚡</span>
+                                <span>${proj.secret}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            // Initialize Chart
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Day 1', 'Day 5', 'Day 10', 'Day 15', 'Day 21'],
+                    datasets: [
+                        {
+                            label: 'Manual "Tinkering" Effort',
+                            data: [100, 80, 40, 20, 5],
+                            borderColor: '#78716c', // Stone 500
+                            tension: 0.4,
+                            borderDash: [5, 5]
+                        },
+                        {
+                            label: 'Automated/Systemic Output',
+                            data: [0, 20, 60, 85, 100],
+                            borderColor: '#f59e0b', // Amber 500
+                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: '#f59e0b'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: {
+                                    family: "'Inter', sans-serif"
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            display: false
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Set current day (simulation)
+            document.getElementById('current-day-display').innerText = "1";
+        });
+
+        // Interactive Functions
+        function toggleDetails(id) {
+            const el = document.getElementById(id);
+            const icon = document.getElementById(`icon-${id}`);
+            if (el.classList.contains('hidden')) {
+                el.classList.remove('hidden');
+                icon.classList.add('rotate-180');
+            } else {
+                el.classList.add('hidden');
+                icon.classList.remove('rotate-180');
+            }
+        }
+
+        function resetProgress() {
+            const checks = document.querySelectorAll('.step-check');
+            checks.forEach(c => c.checked = false);
+            alert("Protocol Reset. Good luck, Maker.");
+        }
+    </script>
+</body>
+
+</html>
