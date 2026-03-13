@@ -1,0 +1,1742 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoFlow — Vehicle Management System</title>
+    <meta name="description"
+        content="Track vehicles from impound to sale. Manage parts, costs, transport, and profitability.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        :root {
+            --bg: #06080f;
+            --bg2: #0c1120;
+            --bg3: #151d2e;
+            --bg4: #243044;
+            --text: #eef2ff;
+            --text2: #94a3b8;
+            --text3: #64748b;
+            --accent: #4f8ff7;
+            --accent2: #7c5cfc;
+            --green: #34d399;
+            --red: #f87171;
+            --amber: #fbbf24;
+            --purple: #c084fc;
+            --cyan: #22d3ee;
+            --glass: rgba(15, 23, 42, .55);
+            --glass2: rgba(15, 23, 42, .78);
+            --radius: 16px;
+            --radius2: 10px;
+            --glow-accent: rgba(79, 143, 247, .25);
+            --glow-green: rgba(52, 211, 153, .2);
+            --glow-red: rgba(248, 113, 113, .2);
+            --glow-purple: rgba(192, 132, 252, .2);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden
+        }
+
+        /* ANIMATED MESH BACKGROUND */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background:
+                radial-gradient(ellipse 80% 60% at 10% 20%, rgba(79, 143, 247, .08) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 80% at 85% 75%, rgba(124, 92, 252, .07) 0%, transparent 55%),
+                radial-gradient(ellipse 50% 50% at 50% 50%, rgba(34, 211, 238, .04) 0%, transparent 50%);
+            animation: meshDrift 20s ease-in-out infinite alternate;
+        }
+
+        @keyframes meshDrift {
+            0% {
+                background-position: 0% 0%
+            }
+
+            50% {
+                background-position: 100% 100%
+            }
+
+            100% {
+                background-position: 0% 100%
+            }
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 250px;
+            background: linear-gradient(180deg, var(--bg2) 0%, rgba(12, 17, 32, .95) 100%);
+            border-right: 1px solid rgba(36, 48, 68, .6);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            z-index: 100;
+            transition: transform .3s;
+            backdrop-filter: blur(20px);
+        }
+
+        .sidebar .logo {
+            padding: 28px 24px;
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent), var(--purple), var(--cyan));
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+            position: relative;
+        }
+
+        .sidebar .logo::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 24px;
+            right: 24px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent), var(--purple), transparent);
+        }
+
+        .sidebar .logo span {
+            font-weight: 400;
+            opacity: .7
+        }
+
+        .sidebar nav {
+            flex: 1;
+            padding: 16px 14px
+        }
+
+        .sidebar nav button {
+            width: 100%;
+            text-align: left;
+            background: none;
+            border: none;
+            color: var(--text2);
+            padding: 13px 18px;
+            border-radius: var(--radius2);
+            font-size: .875rem;
+            font-family: inherit;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            transition: all .25s;
+            margin-bottom: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sidebar nav button::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: var(--radius2);
+            opacity: 0;
+            background: linear-gradient(135deg, rgba(79, 143, 247, .1), rgba(124, 92, 252, .08));
+            transition: opacity .25s;
+        }
+
+        .sidebar nav button:hover {
+            color: var(--text);
+            transform: translateX(4px)
+        }
+
+        .sidebar nav button:hover::before {
+            opacity: 1
+        }
+
+        .sidebar nav button.active {
+            color: var(--accent);
+            font-weight: 600
+        }
+
+        .sidebar nav button.active::before {
+            opacity: 1
+        }
+
+        .sidebar nav button.active::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 20%;
+            bottom: 20%;
+            width: 3px;
+            background: linear-gradient(180deg, var(--accent), var(--accent2));
+            border-radius: 0 4px 4px 0;
+        }
+
+        .sidebar nav button .icon {
+            width: 22px;
+            text-align: center;
+            font-size: 1.15rem;
+            position: relative;
+            z-index: 1
+        }
+
+        .sidebar .sidebar-footer {
+            padding: 18px 24px;
+            border-top: 1px solid rgba(36, 48, 68, .5);
+            font-size: .7rem;
+            color: var(--text3);
+            letter-spacing: .3px
+        }
+
+        /* MAIN */
+        .main {
+            margin-left: 250px;
+            flex: 1;
+            padding: 28px 36px;
+            min-height: 100vh
+        }
+
+        .section {
+            display: none
+        }
+
+        .section.active {
+            display: block;
+            animation: fadeUp .4s cubic-bezier(.16, 1, .3, 1)
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(16px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        /* TOP BAR */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px
+        }
+
+        .top-bar h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--text), var(--text2));
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent
+        }
+
+        .top-bar .subtitle {
+            color: var(--text3);
+            font-size: .85rem;
+            margin-top: 4px;
+            -webkit-text-fill-color: var(--text3)
+        }
+
+        /* BUTTONS */
+        .btn {
+            padding: 11px 22px;
+            border-radius: var(--radius2);
+            border: none;
+            font-family: inherit;
+            font-size: .875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .25s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            color: #fff;
+            box-shadow: 0 2px 12px rgba(79, 143, 247, .2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(79, 143, 247, .35)
+        }
+
+        .btn-primary:active {
+            transform: translateY(0)
+        }
+
+        .btn-secondary {
+            background: var(--bg3);
+            color: var(--text);
+            border: 1px solid var(--bg4)
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg4);
+            border-color: rgba(79, 143, 247, .3)
+        }
+
+        .btn-danger {
+            background: rgba(248, 113, 113, .1);
+            color: var(--red);
+            border: 1px solid rgba(248, 113, 113, .2)
+        }
+
+        .btn-danger:hover {
+            background: rgba(248, 113, 113, .18);
+            box-shadow: 0 0 20px rgba(248, 113, 113, .15)
+        }
+
+        .btn-sm {
+            padding: 7px 14px;
+            font-size: .78rem
+        }
+
+        /* KPI CARDS */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 18px;
+            margin-bottom: 32px
+        }
+
+        .kpi-card {
+            background: var(--glass2);
+            border: 1px solid rgba(36, 48, 68, .7);
+            border-top: 2px solid var(--bg4);
+            border-radius: var(--radius);
+            padding: 22px;
+            backdrop-filter: blur(16px);
+            transition: all .3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent), var(--accent2));
+            opacity: 0;
+            transition: opacity .3s;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(79, 143, 247, .25)
+        }
+
+        .kpi-card:hover::before {
+            opacity: 1
+        }
+
+        .kpi-card .label {
+            font-size: .7rem;
+            color: var(--text3);
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            margin-bottom: 10px
+        }
+
+        .kpi-card .value {
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -0.5px
+        }
+
+        .kpi-card .sub {
+            font-size: .78rem;
+            color: var(--text3);
+            margin-top: 6px
+        }
+
+        .kpi-card.blue .value {
+            color: var(--accent)
+        }
+
+        .kpi-card.blue:hover::before {
+            background: linear-gradient(90deg, var(--accent), var(--cyan))
+        }
+
+        .kpi-card.green .value {
+            color: var(--green)
+        }
+
+        .kpi-card.green {
+            border-top-color: rgba(52, 211, 153, .3)
+        }
+
+        .kpi-card.green:hover::before {
+            background: linear-gradient(90deg, var(--green), var(--cyan))
+        }
+
+        .kpi-card.amber .value {
+            color: var(--amber)
+        }
+
+        .kpi-card.amber {
+            border-top-color: rgba(251, 191, 36, .3)
+        }
+
+        .kpi-card.amber:hover::before {
+            background: linear-gradient(90deg, var(--amber), #f97316)
+        }
+
+        .kpi-card.purple .value {
+            color: var(--purple)
+        }
+
+        .kpi-card.purple {
+            border-top-color: rgba(192, 132, 252, .3)
+        }
+
+        .kpi-card.purple:hover::before {
+            background: linear-gradient(90deg, var(--purple), var(--accent2))
+        }
+
+        .kpi-card.red .value {
+            color: var(--red)
+        }
+
+        .kpi-card.red {
+            border-top-color: rgba(248, 113, 113, .3)
+        }
+
+        .kpi-card.red:hover::before {
+            background: linear-gradient(90deg, var(--red), var(--amber))
+        }
+
+        /* TABLE */
+        .table-wrap {
+            background: var(--glass2);
+            border: 1px solid rgba(36, 48, 68, .7);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, .2);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse
+        }
+
+        th {
+            text-align: left;
+            padding: 14px 18px;
+            font-size: .7rem;
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            color: var(--text3);
+            border-bottom: 1px solid var(--bg3);
+            background: rgba(12, 17, 32, .6);
+        }
+
+        td {
+            padding: 14px 18px;
+            font-size: .875rem;
+            border-bottom: 1px solid rgba(36, 48, 68, .3)
+        }
+
+        tr {
+            cursor: pointer;
+            transition: all .2s
+        }
+
+        tr:hover td {
+            background: rgba(79, 143, 247, .05)
+        }
+
+        /* BADGES */
+        .badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: .68rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+            box-shadow: inset 0 0 0 1px currentColor;
+        }
+
+        .badge-blue {
+            background: rgba(79, 143, 247, .12);
+            color: var(--accent)
+        }
+
+        .badge-green {
+            background: rgba(52, 211, 153, .12);
+            color: var(--green)
+        }
+
+        .badge-amber {
+            background: rgba(251, 191, 36, .12);
+            color: var(--amber)
+        }
+
+        .badge-red {
+            background: rgba(248, 113, 113, .12);
+            color: var(--red)
+        }
+
+        .badge-purple {
+            background: rgba(192, 132, 252, .12);
+            color: var(--purple)
+        }
+
+        .badge-cyan {
+            background: rgba(34, 211, 238, .12);
+            color: var(--cyan)
+        }
+
+        /* FORMS */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 7px
+        }
+
+        .form-group.full {
+            grid-column: 1/-1
+        }
+
+        .form-group label {
+            font-size: .78rem;
+            color: var(--text2);
+            font-weight: 500;
+            letter-spacing: .2px
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            background: rgba(21, 29, 46, .8);
+            border: 1px solid var(--bg4);
+            border-radius: var(--radius2);
+            padding: 11px 16px;
+            color: var(--text);
+            font-family: inherit;
+            font-size: .875rem;
+            transition: all .25s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(79, 143, 247, .12), 0 0 20px rgba(79, 143, 247, .08);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 70px
+        }
+
+        /* MODAL */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .7);
+            z-index: 200;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(8px);
+        }
+
+        .modal-overlay.open {
+            display: flex
+        }
+
+        .modal {
+            background: linear-gradient(180deg, var(--bg2), var(--bg));
+            border: 1px solid rgba(36, 48, 68, .8);
+            border-radius: var(--radius);
+            width: 90%;
+            max-width: 820px;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 32px;
+            animation: modalIn .3s cubic-bezier(.16, 1, .3, 1);
+            box-shadow: 0 24px 80px rgba(0, 0, 0, .5), 0 0 1px rgba(79, 143, 247, .3);
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: scale(.95) translateY(10px)
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0)
+            }
+        }
+
+        .modal h2 {
+            font-size: 1.25rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between
+        }
+
+        .modal .close-btn {
+            background: var(--bg3);
+            border: none;
+            color: var(--text2);
+            font-size: 1.1rem;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all .2s
+        }
+
+        .modal .close-btn:hover {
+            background: var(--red);
+            color: #fff
+        }
+
+        /* TABS */
+        .tabs {
+            display: flex;
+            gap: 2px;
+            margin-bottom: 24px;
+            background: var(--bg3);
+            border-radius: var(--radius2);
+            padding: 4px;
+            border: none
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--text3);
+            padding: 10px 18px;
+            font-family: inherit;
+            font-size: .82rem;
+            cursor: pointer;
+            border-radius: 7px;
+            transition: all .2s;
+            border-bottom: none;
+        }
+
+        .tab-btn.active {
+            background: var(--accent);
+            color: #fff;
+            font-weight: 600;
+            box-shadow: 0 2px 12px rgba(79, 143, 247, .3)
+        }
+
+        .tab-btn:hover:not(.active) {
+            background: var(--bg4);
+            color: var(--text)
+        }
+
+        .tab-content {
+            display: none
+        }
+
+        .tab-content.active {
+            display: block
+        }
+
+        /* STEPPER */
+        .stepper {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            margin: 24px 0
+        }
+
+        .step {
+            flex: 1;
+            text-align: center;
+            position: relative
+        }
+
+        .step .dot {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--bg3);
+            border: 2px solid var(--bg4);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .75rem;
+            font-weight: 700;
+            transition: all .35s;
+            margin-bottom: 8px;
+        }
+
+        .step.done .dot {
+            background: var(--green);
+            border-color: var(--green);
+            color: #fff;
+            box-shadow: 0 0 12px rgba(52, 211, 153, .3)
+        }
+
+        .step.current .dot {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+            box-shadow: 0 0 20px rgba(79, 143, 247, .4);
+            animation: stepPulse 2s infinite
+        }
+
+        @keyframes stepPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 20px rgba(79, 143, 247, .4)
+            }
+
+            50% {
+                box-shadow: 0 0 30px rgba(79, 143, 247, .6)
+            }
+        }
+
+        .step .step-label {
+            font-size: .72rem;
+            color: var(--text3);
+            font-weight: 500
+        }
+
+        .step.done .step-label,
+        .step.current .step-label {
+            color: var(--text)
+        }
+
+        .step-line {
+            flex: 0 0 40px;
+            height: 3px;
+            background: var(--bg4);
+            margin-bottom: 24px;
+            border-radius: 2px
+        }
+
+        .step-line.done {
+            background: linear-gradient(90deg, var(--green), var(--cyan))
+        }
+
+        /* CHARTS */
+        .chart-container {
+            background: var(--glass2);
+            border: 1px solid rgba(36, 48, 68, .7);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, .15);
+        }
+
+        .bar-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 14px
+        }
+
+        .bar-label {
+            width: 160px;
+            font-size: .78rem;
+            color: var(--text2);
+            text-align: right;
+            flex-shrink: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap
+        }
+
+        .bar-track {
+            flex: 1;
+            height: 30px;
+            background: var(--bg3);
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative
+        }
+
+        .bar-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width .6s cubic-bezier(.16, 1, .3, 1);
+            display: flex;
+            align-items: center;
+            padding-left: 10px;
+            font-size: .7rem;
+            font-weight: 600;
+            min-width: fit-content;
+        }
+
+        .bar-fill.positive {
+            background: linear-gradient(90deg, var(--green), var(--cyan));
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, .15)
+        }
+
+        .bar-fill.negative {
+            background: linear-gradient(90deg, var(--red), var(--amber));
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, .15)
+        }
+
+        .bar-value {
+            width: 90px;
+            font-size: .8rem;
+            font-weight: 700;
+            text-align: right;
+            flex-shrink: 0
+        }
+
+        /* SEARCH */
+        .search-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 22px;
+            flex-wrap: wrap
+        }
+
+        .search-bar input,
+        .search-bar select {
+            background: rgba(21, 29, 46, .8);
+            border: 1px solid var(--bg4);
+            border-radius: var(--radius2);
+            padding: 11px 16px;
+            color: var(--text);
+            font-family: inherit;
+            font-size: .875rem;
+            transition: all .25s;
+        }
+
+        .search-bar input {
+            flex: 1;
+            min-width: 200px
+        }
+
+        .search-bar input:focus,
+        .search-bar select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(79, 143, 247, .12)
+        }
+
+        .search-bar select {
+            min-width: 150px
+        }
+
+        /* PROFIT CARD */
+        .profit-card {
+            background: var(--glass2);
+            border: 1px solid rgba(36, 48, 68, .7);
+            border-radius: var(--radius);
+            padding: 22px;
+            margin-top: 16px
+        }
+
+        .profit-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 9px 0;
+            font-size: .875rem
+        }
+
+        .profit-row.total {
+            border-top: 2px solid rgba(79, 143, 247, .2);
+            font-weight: 700;
+            font-size: 1.05rem;
+            margin-top: 10px;
+            padding-top: 14px
+        }
+
+        .profit-positive {
+            color: var(--green)
+        }
+
+        .profit-negative {
+            color: var(--red)
+        }
+
+        /* EMPTY STATE */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text3)
+        }
+
+        .empty-state .icon {
+            font-size: 3.5rem;
+            margin-bottom: 16px;
+            filter: grayscale(.3)
+        }
+
+        .empty-state p {
+            font-size: .95rem;
+            margin-bottom: 20px
+        }
+
+        /* RESPONSIVE */
+        @media(max-width:768px) {
+            .sidebar {
+                transform: translateX(-100%)
+            }
+
+            .sidebar.open {
+                transform: translateX(0)
+            }
+
+            .main {
+                margin-left: 0;
+                padding: 16px
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr
+            }
+
+            .mobile-toggle {
+                display: block !important
+            }
+        }
+
+        .mobile-toggle {
+            display: none;
+            position: fixed;
+            top: 14px;
+            left: 14px;
+            z-index: 150;
+            background: var(--bg3);
+            border: 1px solid var(--bg4);
+            color: var(--text);
+            padding: 10px 12px;
+            border-radius: var(--radius2);
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        /* COST METER */
+        .cost-meter {
+            height: 10px;
+            background: var(--bg3);
+            border-radius: 6px;
+            overflow: hidden;
+            margin: 10px 0
+        }
+
+        .cost-meter .fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width .5s cubic-bezier(.16, 1, .3, 1)
+        }
+
+        .decision-box {
+            padding: 18px;
+            border-radius: var(--radius2);
+            text-align: center;
+            font-weight: 700;
+            font-size: 1.05rem;
+            margin-top: 14px;
+            letter-spacing: .3px
+        }
+
+        .decision-retail {
+            background: rgba(52, 211, 153, .08);
+            color: var(--green);
+            border: 1px solid rgba(52, 211, 153, .25);
+            box-shadow: 0 0 30px rgba(52, 211, 153, .08)
+        }
+
+        .decision-scrap {
+            background: rgba(248, 113, 113, .08);
+            color: var(--red);
+            border: 1px solid rgba(248, 113, 113, .25);
+            box-shadow: 0 0 30px rgba(248, 113, 113, .08)
+        }
+
+        .decision-neutral {
+            background: rgba(251, 191, 36, .08);
+            color: var(--amber);
+            border: 1px solid rgba(251, 191, 36, .25);
+            box-shadow: 0 0 30px rgba(251, 191, 36, .08)
+        }
+
+        .parts-summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            margin-bottom: 18px
+        }
+
+        .inline-form {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 18px
+        }
+
+        .inline-form input,
+        .inline-form select {
+            background: rgba(21, 29, 46, .8);
+            border: 1px solid var(--bg4);
+            border-radius: var(--radius2);
+            padding: 9px 14px;
+            color: var(--text);
+            font-family: inherit;
+            font-size: .8rem;
+            transition: all .25s;
+        }
+
+        .inline-form input:focus,
+        .inline-form select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(79, 143, 247, .1)
+        }
+
+        /* SCROLLBAR */
+        ::-webkit-scrollbar {
+            width: 6px
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg)
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--bg4);
+            border-radius: 3px
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text3)
+        }
+
+        /* VALUE COUNTER ANIMATION */
+        @keyframes countUp {
+            from {
+                opacity: 0;
+                transform: translateY(8px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .kpi-card .value {
+            animation: countUp .5s ease
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+    <button class="mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+    <aside class="sidebar" id="sidebar">
+        <div class="logo">AutoFlow<span> Pro</span></div>
+        <nav id="nav">
+            <button class="active" data-section="dashboard"><span class="icon">📊</span>Dashboard</button>
+            <button data-section="intake"><span class="icon">🚗</span>Vehicle Intake</button>
+            <button data-section="vehicles"><span class="icon">📋</span>All Vehicles</button>
+            <button data-section="parts"><span class="icon">🔩</span>Parts Inventory</button>
+            <button data-section="transport"><span class="icon">🚚</span>Transport</button>
+            <button data-section="analytics"><span class="icon">📈</span>Y/M/M Analytics</button>
+        </nav>
+        <div class="sidebar-footer">AutoFlow Pro v2.0<br>☁️ Connected to Supabase</div>
+    </aside>
+
+    <main class="main">
+        <!-- DASHBOARD -->
+        <div class="section active" id="sec-dashboard">
+            <div class="top-bar">
+                <div>
+                    <h1>Dashboard</h1>
+                    <div class="subtitle">Business overview at a glance</div>
+                </div>
+            </div>
+            <div class="kpi-grid" id="kpi-grid"></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+                <div class="chart-container">
+                    <h3 style="margin-bottom:16px;font-size:.95rem">Profit by Make</h3>
+                    <div id="chart-make"></div>
+                </div>
+                <div class="chart-container">
+                    <h3 style="margin-bottom:16px;font-size:.95rem">Recent Vehicles</h3>
+                    <div id="recent-vehicles"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VEHICLE INTAKE -->
+        <div class="section" id="sec-intake">
+            <div class="top-bar">
+                <div>
+                    <h1>Vehicle Intake</h1>
+                    <div class="subtitle">Add a new vehicle from impound or auction</div>
+                </div>
+            </div>
+            <div class="form-grid" style="max-width:700px">
+                <div class="form-group full" style="flex-direction:row;gap:8px;align-items:end">
+                    <div style="flex:1"><label>VIN Number</label><input type="text" id="vin-input"
+                            placeholder="Enter 17-character VIN" maxlength="17"></div>
+                    <button class="btn btn-primary" onclick="decodeVIN()" id="vin-btn">🔍 Decode VIN</button>
+                </div>
+                <div id="vin-status" class="form-group full" style="display:none"></div>
+                <div class="form-group"><label>Year</label><input type="text" id="v-year" placeholder="Auto-filled">
+                </div>
+                <div class="form-group"><label>Make</label><input type="text" id="v-make" placeholder="Auto-filled">
+                </div>
+                <div class="form-group"><label>Model</label><input type="text" id="v-model" placeholder="Auto-filled">
+                </div>
+                <div class="form-group"><label>Trim</label><input type="text" id="v-trim" placeholder="Auto-filled">
+                </div>
+                <div class="form-group"><label>Source / Impound Lot</label><input type="text" id="v-source"
+                        placeholder="e.g. City Impound Lot #3"></div>
+                <div class="form-group"><label>Purchase Price ($)</label><input type="number" id="v-price"
+                        placeholder="0.00" step="0.01"></div>
+                <div class="form-group"><label>Purchase Date</label><input type="date" id="v-date"></div>
+                <div class="form-group"><label>Estimated Retail Value ($)</label><input type="number" id="v-retail"
+                        placeholder="0.00" step="0.01"></div>
+                <div class="form-group full"><label>Notes</label><textarea id="v-notes"
+                        placeholder="Condition notes, damage, etc."></textarea></div>
+                <div class="form-group full"><button class="btn btn-primary" onclick="addVehicle()">➕ Add
+                        Vehicle</button></div>
+            </div>
+        </div>
+
+        <!-- ALL VEHICLES -->
+        <div class="section" id="sec-vehicles">
+            <div class="top-bar">
+                <div>
+                    <h1>All Vehicles</h1>
+                    <div class="subtitle">Manage your entire fleet</div>
+                </div>
+            </div>
+            <div class="search-bar">
+                <input type="text" id="search-input" placeholder="Search by VIN, make, model..."
+                    oninput="renderVehicleList()">
+                <select id="filter-status" onchange="renderVehicleList()">
+                    <option value="">All Statuses</option>
+                    <option value="intake">Intake</option>
+                    <option value="transport">Transport</option>
+                    <option value="evaluation">Evaluation</option>
+                    <option value="retail">Retail</option>
+                    <option value="scrap">Scrap</option>
+                    <option value="sold">Sold</option>
+                </select>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Vehicle</th>
+                            <th>VIN</th>
+                            <th>Status</th>
+                            <th>Decision</th>
+                            <th>Purchase</th>
+                            <th>Profit</th>
+                        </tr>
+                    </thead>
+                    <tbody id="vehicle-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- PARTS INVENTORY -->
+        <div class="section" id="sec-parts">
+            <div class="top-bar">
+                <div>
+                    <h1>Parts Inventory</h1>
+                    <div class="subtitle">Track all sellable parts across vehicles</div>
+                </div>
+            </div>
+            <div class="search-bar">
+                <input type="text" id="parts-search" placeholder="Search parts..." oninput="renderGlobalParts()">
+                <select id="parts-filter" onchange="renderGlobalParts()">
+                    <option value="">All</option>
+                    <option value="available">Available</option>
+                    <option value="sold">Sold</option>
+                </select>
+            </div>
+            <div class="parts-summary" id="parts-summary"></div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Part</th>
+                            <th>Vehicle</th>
+                            <th>Condition</th>
+                            <th>Price</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="parts-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TRANSPORT -->
+        <div class="section" id="sec-transport">
+            <div class="top-bar">
+                <div>
+                    <h1>Transport Tracker</h1>
+                    <div class="subtitle">Monitor vehicle pickups and deliveries</div>
+                </div>
+            </div>
+            <div id="transport-list"></div>
+        </div>
+
+        <!-- YMM ANALYTICS -->
+        <div class="section" id="sec-analytics">
+            <div class="top-bar">
+                <div>
+                    <h1>Year / Make / Model Analytics</h1>
+                    <div class="subtitle">Profitability insights to guide future purchases</div>
+                </div>
+            </div>
+            <div class="kpi-grid" id="analytics-kpi"></div>
+            <div class="chart-container" style="margin-bottom:20px">
+                <h3 style="margin-bottom:16px;font-size:.95rem">Profit by Year/Make/Model</h3>
+                <div id="ymm-chart"></div>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Year/Make/Model</th>
+                            <th>Vehicles</th>
+                            <th>Avg Purchase</th>
+                            <th>Avg Sale</th>
+                            <th>Avg Profit</th>
+                            <th>Total Profit</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ymm-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- VEHICLE DETAIL MODAL -->
+    <div class="modal-overlay" id="vehicle-modal">
+        <div class="modal">
+            <h2><span id="modal-title">Vehicle Details</span><button class="close-btn" onclick="closeModal()">✕</button>
+            </h2>
+            <div class="tabs" id="modal-tabs">
+                <button class="tab-btn active" data-tab="tab-info">Info</button>
+                <button class="tab-btn" data-tab="tab-parts">Parts</button>
+                <button class="tab-btn" data-tab="tab-costs">Costs</button>
+                <button class="tab-btn" data-tab="tab-transport">Transport</button>
+                <button class="tab-btn" data-tab="tab-profit">Profit</button>
+            </div>
+            <div class="tab-content active" id="tab-info">
+                <div id="info-content"></div>
+            </div>
+            <div class="tab-content" id="tab-parts">
+                <div id="parts-content"></div>
+            </div>
+            <div class="tab-content" id="tab-costs">
+                <div id="costs-content"></div>
+            </div>
+            <div class="tab-content" id="tab-transport">
+                <div id="transport-content"></div>
+            </div>
+            <div class="tab-content" id="tab-profit">
+                <div id="profit-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ========== SUPABASE CONFIG ========== */
+        const SUPABASE_URL = 'https://xduvsrttjwjwprcdvanx.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_0WuPwzFoxlmkQ0IWmT_-JA_QtHlSLky';
+        const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        /* ========== DATA LAYER ========== */
+        function fmt$(n) { return '$' + Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }
+
+        async function loadVehicles() {
+            const { data: vehicles, error } = await sb.from('vehicles').select('*').order('created_at', { ascending: false });
+            if (error) { console.error('Load vehicles error:', error); return []; }
+            if (!vehicles.length) return [];
+            // Load parts and costs for each vehicle
+            const ids = vehicles.map(v => v.id);
+            const [partsRes, costsRes] = await Promise.all([
+                sb.from('parts').select('*').in('vehicle_id', ids.length ? ids : ['none']),
+                sb.from('refurb_costs').select('*').in('vehicle_id', ids.length ? ids : ['none'])
+            ]);
+            const partsMap = {}, costsMap = {};
+            (partsRes.data || []).forEach(p => { if (!partsMap[p.vehicle_id]) partsMap[p.vehicle_id] = []; partsMap[p.vehicle_id].push(p); });
+            (costsRes.data || []).forEach(c => { if (!costsMap[c.vehicle_id]) costsMap[c.vehicle_id] = []; costsMap[c.vehicle_id].push(c); });
+            return vehicles.map(v => ({
+                ...v,
+                purchasePrice: Number(v.purchase_price) || 0,
+                purchaseDate: v.purchase_date || '',
+                estimatedRetailValue: Number(v.estimated_retail_value) || 0,
+                transportStatus: v.transport_status || 'pending',
+                transportDestination: v.transport_destination || '',
+                transportNotes: v.transport_notes || '',
+                salePrice: Number(v.sale_price) || 0,
+                saleDate: v.sale_date || '',
+                parts: (partsMap[v.id] || []).map(p => ({ ...p, price: Number(p.price) || 0, soldPrice: Number(p.sold_price) || 0, soldDate: p.sold_date || '' })),
+                refurbCosts: (costsMap[v.id] || []).map(c => ({ ...c, amount: Number(c.amount) || 0 }))
+            }));
+        }
+
+        async function loadVehicle(id) {
+            const vehicles = await loadVehicles();
+            return vehicles.find(v => v.id === id) || null;
+        }
+
+        // Map camelCase field names to snake_case DB columns
+        const fieldMap = {
+            purchasePrice: 'purchase_price', estimatedRetailValue: 'estimated_retail_value',
+            salePrice: 'sale_price', saleDate: 'sale_date', purchaseDate: 'purchase_date',
+            transportStatus: 'transport_status', transportDestination: 'transport_destination',
+            transportNotes: 'transport_notes'
+        };
+
+        /* ========== NAV ========== */
+        document.querySelectorAll('#nav button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('#nav button').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+                document.getElementById('sec-' + btn.dataset.section).classList.add('active');
+                if (btn.dataset.section === 'dashboard') renderDashboard();
+                if (btn.dataset.section === 'vehicles') renderVehicleList();
+                if (btn.dataset.section === 'parts') renderGlobalParts();
+                if (btn.dataset.section === 'transport') renderTransport();
+                if (btn.dataset.section === 'analytics') renderAnalytics();
+                document.querySelector('.sidebar').classList.remove('open');
+            });
+        });
+
+        /* ========== MODAL TABS ========== */
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById(btn.dataset.tab).classList.add('active');
+            });
+        });
+
+        /* ========== VIN DECODE ========== */
+        async function decodeVIN() {
+            const vin = document.getElementById('vin-input').value.trim();
+            if (vin.length !== 17) return alert('VIN must be 17 characters');
+            const btn = document.getElementById('vin-btn');
+            const st = document.getElementById('vin-status');
+            btn.textContent = '⏳ Decoding...'; btn.disabled = true;
+            st.style.display = 'block'; st.innerHTML = '<span style="color:var(--amber)">Contacting NHTSA database...</span>';
+            try {
+                const r = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVin/${vin}?format=json`);
+                const d = await r.json();
+                const get = name => { const item = d.Results.find(r => r.Variable === name); return item && item.Value && item.Value.trim() !== '' && item.Value !== 'Not Applicable' ? item.Value.trim() : ''; };
+                const getAny = (...names) => { for (const n of names) { const v = get(n); if (v) return v; } return ''; };
+                document.getElementById('v-year').value = getAny('Model Year', 'ModelYear');
+                document.getElementById('v-make').value = getAny('Make', 'Manufacturer Name');
+                document.getElementById('v-model').value = getAny('Model', 'Series', 'Series2');
+                document.getElementById('v-trim').value = getAny('Trim', 'Trim2', 'Series');
+                st.innerHTML = `<span style="color:var(--green)">✅ Decoded: ${get('Model Year')} ${get('Make')} ${get('Model')}</span>`;
+            } catch (e) { st.innerHTML = `<span style="color:var(--red)">❌ Decode failed. Fill in manually.</span>`; }
+            btn.textContent = '🔍 Decode VIN'; btn.disabled = false;
+        }
+
+        /* ========== ADD VEHICLE ========== */
+        async function addVehicle() {
+            const vin = document.getElementById('vin-input').value.trim();
+            const year = document.getElementById('v-year').value.trim();
+            const make = document.getElementById('v-make').value.trim();
+            const model = document.getElementById('v-model').value.trim();
+            if (!year || !make || !model) return alert('Year, Make, and Model are required');
+            const { error } = await sb.from('vehicles').insert({
+                vin, year, make, model,
+                trim: document.getElementById('v-trim').value.trim(),
+                status: 'intake', source: document.getElementById('v-source').value.trim(),
+                purchase_date: document.getElementById('v-date').value || null,
+                purchase_price: parseFloat(document.getElementById('v-price').value) || 0,
+                estimated_retail_value: parseFloat(document.getElementById('v-retail').value) || 0,
+                notes: document.getElementById('v-notes').value.trim()
+            });
+            if (error) return alert('Error saving: ' + error.message);
+            ['vin-input', 'v-year', 'v-make', 'v-model', 'v-trim', 'v-source', 'v-price', 'v-date', 'v-retail', 'v-notes'].forEach(id => { document.getElementById(id).value = ''; });
+            document.getElementById('vin-status').style.display = 'none';
+            alert(`✅ ${year} ${make} ${model} added!`);
+        }
+
+        /* ========== BADGE HELPERS ========== */
+        function statusBadge(s) {
+            const map = { intake: 'blue', transport: 'amber', evaluation: 'cyan', retail: 'green', scrap: 'red', sold: 'purple' };
+            return `<span class="badge badge-${map[s] || 'blue'}">${s}</span>`;
+        }
+        function decisionBadge(d) {
+            if (!d) return '<span class="badge badge-cyan">Pending</span>';
+            return d === 'retail' ? '<span class="badge badge-green">Retail</span>' : '<span class="badge badge-red">Scrap</span>';
+        }
+
+        /* ========== VEHICLE LIST ========== */
+        async function renderVehicleList() {
+            const vehicles = await loadVehicles();
+            const q = (document.getElementById('search-input').value || '').toLowerCase();
+            const fs = document.getElementById('filter-status').value;
+            const filtered = vehicles.filter(v => {
+                const match = !q || (v.vin || '').toLowerCase().includes(q) || v.make.toLowerCase().includes(q) || v.model.toLowerCase().includes(q) || v.year.includes(q);
+                const statMatch = !fs || v.status === fs;
+                return match && statMatch;
+            });
+            const tbody = document.getElementById('vehicle-tbody');
+            if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:40px">No vehicles found</td></tr>'; return; }
+            tbody.innerHTML = filtered.map(v => {
+                const profit = calcProfit(v);
+                return `<tr onclick="openVehicle('${v.id}')">
+<td><strong>${v.year} ${v.make} ${v.model}</strong><br><span style="color:var(--text3);font-size:.75rem">${v.trim || ''}</span></td>
+<td style="font-family:monospace;font-size:.8rem">${v.vin || 'N/A'}</td>
+<td>${statusBadge(v.status)}</td>
+<td>${decisionBadge(v.decision)}</td>
+<td>${fmt$(v.purchasePrice)}</td>
+<td class="${profit >= 0 ? 'profit-positive' : 'profit-negative'}">${fmt$(profit)}</td>
+</tr>`;
+            }).join('');
+        }
+
+        /* ========== PROFIT CALC ========== */
+        function calcProfit(v) {
+            const costs = v.purchasePrice + (v.refurbCosts || []).reduce((s, c) => s + c.amount, 0);
+            const partsSold = (v.parts || []).filter(p => p.status === 'sold').reduce((s, p) => s + (p.soldPrice || 0), 0);
+            const revenue = (v.salePrice || 0) + partsSold;
+            return revenue - costs;
+        }
+
+        /* ========== VEHICLE DETAIL MODAL ========== */
+        let currentVehicleId = null;
+        async function openVehicle(id) {
+            currentVehicleId = id;
+            const v = await loadVehicle(id); if (!v) return;
+            document.getElementById('modal-title').textContent = `${v.year} ${v.make} ${v.model}`;
+            document.getElementById('vehicle-modal').classList.add('open');
+            document.querySelectorAll('.tab-btn').forEach((b, i) => { b.classList.toggle('active', i === 0) });
+            document.querySelectorAll('.tab-content').forEach((c, i) => { c.classList.toggle('active', i === 0) });
+            renderInfoTab(v); renderPartsTab(v); renderCostsTab(v); renderTransportTab(v); renderProfitTab(v);
+        }
+        function closeModal() { document.getElementById('vehicle-modal').classList.remove('open'); currentVehicleId = null; }
+
+        function renderInfoTab(v) {
+            document.getElementById('info-content').innerHTML = `
+<div class="form-grid">
+<div class="form-group"><label>VIN</label><input value="${v.vin || ''}" onchange="updateField('vin',this.value)"></div>
+<div class="form-group"><label>Status</label><select onchange="updateField('status',this.value)">
+${['intake', 'transport', 'evaluation', 'retail', 'scrap', 'sold'].map(s => `<option value="${s}"${v.status === s ? ' selected' : ''}>${s.charAt(0).toUpperCase() + s.slice(1)}</option>`).join('')}
+</select></div>
+<div class="form-group"><label>Decision</label><select onchange="updateField('decision',this.value||null)">
+<option value="">Pending</option><option value="retail"${v.decision === 'retail' ? ' selected' : ''}>Retail</option>
+<option value="scrap"${v.decision === 'scrap' ? ' selected' : ''}>Scrap</option></select></div>
+<div class="form-group"><label>Source</label><input value="${v.source || ''}" onchange="updateField('source',this.value)"></div>
+<div class="form-group"><label>Purchase Price</label><input type="number" value="${v.purchasePrice}" onchange="updateField('purchasePrice',parseFloat(this.value)||0)"></div>
+<div class="form-group"><label>Est. Retail Value</label><input type="number" value="${v.estimatedRetailValue || 0}" onchange="updateField('estimatedRetailValue',parseFloat(this.value)||0)"></div>
+<div class="form-group"><label>Sale Price</label><input type="number" value="${v.salePrice || 0}" onchange="updateField('salePrice',parseFloat(this.value)||0)"></div>
+<div class="form-group"><label>Sale Date</label><input type="date" value="${v.saleDate || ''}" onchange="updateField('saleDate',this.value)"></div>
+<div class="form-group full"><label>Notes</label><textarea onchange="updateField('notes',this.value)">${v.notes || ''}</textarea></div>
+<div class="form-group full"><button class="btn btn-danger btn-sm" onclick="deleteVehicle('${v.id}')">🗑 Delete Vehicle</button></div>
+</div>`;
+        }
+
+        function renderPartsTab(v) {
+            document.getElementById('parts-content').innerHTML = `
+<div class="inline-form">
+<input id="np-name" placeholder="Part name" style="flex:1">
+<select id="np-cond"><option>Good</option><option>Fair</option><option>Poor</option></select>
+<input id="np-price" type="number" placeholder="Price" style="width:100px" step="0.01">
+<button class="btn btn-primary btn-sm" onclick="addPart()">+ Add</button>
+</div>
+<div class="table-wrap"><table><thead><tr><th>Part</th><th>Condition</th><th>Price</th><th>Status</th><th>Actions</th></tr></thead>
+<tbody>${(v.parts || []).map(p => `<tr>
+<td>${p.name}</td><td>${p.condition}</td><td>${fmt$(p.price)}</td>
+<td>${p.status === 'sold' ? `<span class="badge badge-green">Sold ${fmt$(p.soldPrice)}</span>` : '<span class="badge badge-blue">Available</span>'}</td>
+<td>${p.status !== 'sold' ? `<button class="btn btn-sm btn-secondary" onclick="sellPart('${p.id}')">Sell</button>` : ''} <button class="btn btn-sm btn-danger" onclick="removePart('${p.id}')">✕</button></td>
+</tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:20px">No parts added yet</td></tr>'}</tbody></table></div>`;
+        }
+
+        function renderCostsTab(v) {
+            const totalRefurb = (v.refurbCosts || []).reduce((s, c) => s + c.amount, 0);
+            const totalCost = v.purchasePrice + totalRefurb;
+            const ratio = v.estimatedRetailValue > 0 ? (totalCost / v.estimatedRetailValue * 100) : 0;
+            let decClass = 'decision-neutral', decText = '⏳ Add retail estimate to get recommendation';
+            if (v.estimatedRetailValue > 0) {
+                if (totalCost < v.estimatedRetailValue * 0.6) { decClass = 'decision-retail'; decText = '✅ RECOMMEND RETAIL — Good margin'; }
+                else if (totalCost < v.estimatedRetailValue * 0.85) { decClass = 'decision-neutral'; decText = '⚠️ BORDERLINE — Margins are thin'; }
+                else { decClass = 'decision-scrap'; decText = '🔴 RECOMMEND SCRAP — Costs too high'; }
+            }
+            document.getElementById('costs-content').innerHTML = `
+<div class="inline-form">
+<input id="nc-desc" placeholder="Cost description" style="flex:1">
+<input id="nc-amt" type="number" placeholder="Amount" style="width:120px" step="0.01">
+<input id="nc-date" type="date" style="width:150px">
+<button class="btn btn-primary btn-sm" onclick="addCost()">+ Add Cost</button>
+</div>
+<div class="profit-card">
+<div class="profit-row"><span>Purchase Price</span><span>${fmt$(v.purchasePrice)}</span></div>
+<div class="profit-row"><span>Refurb Costs (${(v.refurbCosts || []).length} items)</span><span>${fmt$(totalRefurb)}</span></div>
+<div class="profit-row total"><span>Total Investment</span><span>${fmt$(totalCost)}</span></div>
+<div class="profit-row"><span>Est. Retail Value</span><span>${fmt$(v.estimatedRetailValue)}</span></div>
+<div class="cost-meter"><div class="fill" style="width:${Math.min(ratio, 100)}%;background:${ratio < 60 ? 'var(--green)' : ratio < 85 ? 'var(--amber)' : 'var(--red)'}"></div></div>
+<div class="decision-box ${decClass}">${decText}</div>
+</div>
+<div class="table-wrap" style="margin-top:16px"><table><thead><tr><th>Description</th><th>Amount</th><th>Date</th><th></th></tr></thead>
+<tbody>${(v.refurbCosts || []).map(c => `<tr><td>${c.description}</td><td>${fmt$(c.amount)}</td><td>${c.date || '—'}</td>
+<td><button class="btn btn-sm btn-danger" onclick="removeCost('${c.id}')">✕</button></td></tr>`).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:20px">No refurb costs yet</td></tr>'}</tbody></table></div>`;
+        }
+
+        function renderTransportTab(v) {
+            const steps = ['pending', 'pickup', 'in-transit', 'delivered'];
+            const ci = steps.indexOf(v.transportStatus || 'pending');
+            document.getElementById('transport-content').innerHTML = `
+<div class="stepper">${steps.map((s, i) => `
+${i > 0 ? `<div class="step-line${i <= ci ? ' done' : ''}"></div>` : ''}
+<div class="step ${i < ci ? 'done' : i === ci ? 'current' : ''}">
+<div class="dot">${i < ci ? '✓' : i + 1}</div>
+<div class="step-label">${s.charAt(0).toUpperCase() + s.slice(1)}</div>
+</div>`).join('')}</div>
+<div class="form-grid" style="max-width:500px;margin-top:20px">
+<div class="form-group"><label>Transport Status</label><select onchange="updateField('transportStatus',this.value);refreshTransportTab()">
+${steps.map(s => `<option value="${s}"${v.transportStatus === s ? ' selected' : ''}>${s.charAt(0).toUpperCase() + s.slice(1)}</option>`).join('')}</select></div>
+<div class="form-group"><label>Destination</label><input value="${v.transportDestination || ''}" onchange="updateField('transportDestination',this.value)" placeholder="e.g. Main Yard, Retail Lot"></div>
+<div class="form-group full"><label>Transport Notes</label><textarea onchange="updateField('transportNotes',this.value)" placeholder="Driver, ETA, special instructions...">${v.transportNotes || ''}</textarea></div>
+</div>`;
+        }
+
+        async function refreshTransportTab() {
+            const v = await loadVehicle(currentVehicleId); if (v) renderTransportTab(v);
+        }
+
+        function renderProfitTab(v) {
+            const refurb = (v.refurbCosts || []).reduce((s, c) => s + c.amount, 0);
+            const partsSold = (v.parts || []).filter(p => p.status === 'sold').reduce((s, p) => s + (p.soldPrice || 0), 0);
+            const totalCost = v.purchasePrice + refurb;
+            const totalRevenue = (v.salePrice || 0) + partsSold;
+            const profit = totalRevenue - totalCost;
+            document.getElementById('profit-content').innerHTML = `
+<div class="profit-card">
+<h3 style="margin-bottom:12px;font-size:1rem">Cost Breakdown</h3>
+<div class="profit-row"><span>Purchase Price</span><span>${fmt$(v.purchasePrice)}</span></div>
+<div class="profit-row"><span>Refurbishment (${(v.refurbCosts || []).length} items)</span><span>${fmt$(refurb)}</span></div>
+<div class="profit-row total"><span>Total Cost</span><span>${fmt$(totalCost)}</span></div>
+</div>
+<div class="profit-card">
+<h3 style="margin-bottom:12px;font-size:1rem">Revenue</h3>
+<div class="profit-row"><span>Vehicle Sale Price</span><span>${fmt$(v.salePrice || 0)}</span></div>
+<div class="profit-row"><span>Parts Sold (${(v.parts || []).filter(p => p.status === 'sold').length} parts)</span><span>${fmt$(partsSold)}</span></div>
+<div class="profit-row total"><span>Total Revenue</span><span>${fmt$(totalRevenue)}</span></div>
+</div>
+<div class="profit-card">
+<div class="profit-row total"><span>NET PROFIT</span><span class="${profit >= 0 ? 'profit-positive' : 'profit-negative'}" style="font-size:1.4rem">${fmt$(profit)}</span></div>
+</div>`;
+        }
+
+        /* ========== FIELD UPDATE ========== */
+        async function updateField(field, value) {
+            if (!currentVehicleId) return;
+            const dbField = fieldMap[field] || field;
+            const { error } = await sb.from('vehicles').update({ [dbField]: value }).eq('id', currentVehicleId);
+            if (error) console.error('Update error:', error);
+        }
+
+        /* ========== PARTS CRUD ========== */
+        async function addPart() {
+            const name = document.getElementById('np-name').value.trim(); if (!name) return;
+            const { error } = await sb.from('parts').insert({
+                vehicle_id: currentVehicleId, name,
+                condition: document.getElementById('np-cond').value,
+                price: parseFloat(document.getElementById('np-price').value) || 0
+            });
+            if (error) return alert('Error: ' + error.message);
+            document.getElementById('np-name').value = ''; document.getElementById('np-price').value = '';
+            const v = await loadVehicle(currentVehicleId); if (v) renderPartsTab(v);
+        }
+        async function sellPart(partId) {
+            const price = prompt('Sale price for this part?'); if (price === null) return;
+            const { error } = await sb.from('parts').update({
+                status: 'sold', sold_price: parseFloat(price) || 0, sold_date: new Date().toISOString().slice(0, 10)
+            }).eq('id', partId);
+            if (error) return alert('Error: ' + error.message);
+            const v = await loadVehicle(currentVehicleId); if (v) { renderPartsTab(v); renderProfitTab(v); }
+        }
+        async function removePart(partId) {
+            if (!confirm('Remove this part?')) return;
+            await sb.from('parts').delete().eq('id', partId);
+            const v = await loadVehicle(currentVehicleId); if (v) renderPartsTab(v);
+        }
+
+        /* ========== COSTS CRUD ========== */
+        async function addCost() {
+            const desc = document.getElementById('nc-desc').value.trim(); if (!desc) return;
+            const { error } = await sb.from('refurb_costs').insert({
+                vehicle_id: currentVehicleId, description: desc,
+                amount: parseFloat(document.getElementById('nc-amt').value) || 0,
+                date: document.getElementById('nc-date').value || null
+            });
+            if (error) return alert('Error: ' + error.message);
+            document.getElementById('nc-desc').value = ''; document.getElementById('nc-amt').value = '';
+            const v = await loadVehicle(currentVehicleId); if (v) renderCostsTab(v);
+        }
+        async function removeCost(costId) {
+            await sb.from('refurb_costs').delete().eq('id', costId);
+            const v = await loadVehicle(currentVehicleId); if (v) renderCostsTab(v);
+        }
+
+        /* ========== DELETE VEHICLE ========== */
+        async function deleteVehicle(id) {
+            if (!confirm('Permanently delete this vehicle and all its data?')) return;
+            await sb.from('vehicles').delete().eq('id', id);
+            closeModal(); renderVehicleList();
+        }
+
+        /* ========== GLOBAL PARTS ========== */
+        async function renderGlobalParts() {
+            const vehicles = await loadVehicles();
+            const q = (document.getElementById('parts-search').value || '').toLowerCase();
+            const f = document.getElementById('parts-filter').value;
+            let allParts = [];
+            vehicles.forEach(v => { (v.parts || []).forEach(p => { allParts.push({ ...p, vehicleId: v.id, vehicleLabel: `${v.year} ${v.make} ${v.model}` }); }); });
+            const filtered = allParts.filter(p => {
+                const match = !q || p.name.toLowerCase().includes(q) || p.vehicleLabel.toLowerCase().includes(q);
+                const fMatch = !f || p.status === f; return match && fMatch;
+            });
+            const avail = allParts.filter(p => p.status === 'available');
+            const sold = allParts.filter(p => p.status === 'sold');
+            document.getElementById('parts-summary').innerHTML = `
+<div class="kpi-card blue"><div class="label">Total Parts</div><div class="value">${allParts.length}</div></div>
+<div class="kpi-card green"><div class="label">Available</div><div class="value">${avail.length}</div><div class="sub">${fmt$(avail.reduce((s, p) => s + p.price, 0))} value</div></div>
+<div class="kpi-card purple"><div class="label">Sold</div><div class="value">${sold.length}</div><div class="sub">${fmt$(sold.reduce((s, p) => s + (p.soldPrice || 0), 0))} revenue</div></div>`;
+            document.getElementById('parts-tbody').innerHTML = filtered.map(p => `<tr onclick="openVehicle('${p.vehicleId}')">
+<td>${p.name}</td><td>${p.vehicleLabel}</td><td>${p.condition}</td><td>${fmt$(p.price)}</td>
+<td>${p.status === 'sold' ? '<span class="badge badge-green">Sold</span>' : '<span class="badge badge-blue">Available</span>'}</td>
+<td>${p.status !== 'sold' ? '<button class="btn btn-sm btn-secondary">View</button>' : fmt$(p.soldPrice)}</td>
+</tr>`).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:40px">No parts tracked yet</td></tr>';
+        }
+
+        /* ========== TRANSPORT VIEW ========== */
+        async function renderTransport() {
+            const allVehicles = await loadVehicles();
+            const vehicles = allVehicles.filter(v => v.status === 'transport' || v.transportStatus !== 'delivered');
+            const el = document.getElementById('transport-list');
+            if (!vehicles.length) { el.innerHTML = '<div class="empty-state"><div class="icon">🚚</div><p>No vehicles in transport</p></div>'; return; }
+            const steps = ['pending', 'pickup', 'in-transit', 'delivered'];
+            el.innerHTML = vehicles.map(v => {
+                const ci = steps.indexOf(v.transportStatus || 'pending');
+                return `<div class="profit-card" style="margin-bottom:12px;cursor:pointer" onclick="openVehicle('${v.id}')">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+<strong>${v.year} ${v.make} ${v.model}</strong>
+${statusBadge(v.status)}
+</div>
+<div class="stepper">${steps.map((s, i) => `
+${i > 0 ? `<div class="step-line${i <= ci ? ' done' : ''}"></div>` : ''}
+<div class="step ${i < ci ? 'done' : i === ci ? 'current' : ''}">
+<div class="dot">${i < ci ? '✓' : i + 1}</div>
+<div class="step-label">${s.charAt(0).toUpperCase() + s.slice(1)}</div>
+</div>`).join('')}</div>
+${v.transportDestination ? `<div style="color:var(--text2);font-size:.8rem;margin-top:8px">Destination: ${v.transportDestination}</div>` : ''}
+</div>`;
+            }).join('');
+        }
+
+        /* ========== DASHBOARD ========== */
+        async function renderDashboard() {
+            const vehicles = await loadVehicles();
+            const total = vehicles.length;
+            const active = vehicles.filter(v => v.status !== 'sold').length;
+            const totalProfit = vehicles.reduce((s, v) => s + calcProfit(v), 0);
+            const totalRevenue = vehicles.reduce((s, v) => s + (v.salePrice || 0) + (v.parts || []).filter(p => p.status === 'sold').reduce((ps, p) => ps + (p.soldPrice || 0), 0), 0);
+            const partsAvail = vehicles.reduce((s, v) => s + (v.parts || []).filter(p => p.status === 'available').length, 0);
+            document.getElementById('kpi-grid').innerHTML = `
+<div class="kpi-card blue"><div class="label">Total Vehicles</div><div class="value">${total}</div><div class="sub">${active} active</div></div>
+<div class="kpi-card green"><div class="label">Total Revenue</div><div class="value">${fmt$(totalRevenue)}</div></div>
+<div class="kpi-card ${totalProfit >= 0 ? 'green' : 'red'}"><div class="label">Total Profit</div><div class="value">${fmt$(totalProfit)}</div></div>
+<div class="kpi-card amber"><div class="label">Parts Available</div><div class="value">${partsAvail}</div></div>
+<div class="kpi-card purple"><div class="label">In Transport</div><div class="value">${vehicles.filter(v => v.transportStatus && v.transportStatus !== 'delivered' && v.transportStatus !== 'pending').length}</div></div>`;
+            // Chart by make
+            const byMake = {}; vehicles.forEach(v => { const k = v.make || 'Unknown'; if (!byMake[k]) byMake[k] = { profit: 0, count: 0 }; byMake[k].profit += calcProfit(v); byMake[k].count++; });
+            const makes = Object.entries(byMake).sort((a, b) => b[1].profit - a[1].profit);
+            const maxAbs = Math.max(...makes.map(m => Math.abs(m[1].profit)), 1);
+            document.getElementById('chart-make').innerHTML = makes.length ? makes.map(([m, d]) => `<div class="bar-row">
+<div class="bar-label">${m} (${d.count})</div>
+<div class="bar-track"><div class="bar-fill ${d.profit >= 0 ? 'positive' : 'negative'}" style="width:${Math.abs(d.profit) / maxAbs * 100}%"></div></div>
+<div class="bar-value ${d.profit >= 0 ? 'profit-positive' : 'profit-negative'}">${fmt$(d.profit)}</div>
+</div>`).join('') : '<div style="color:var(--text3);text-align:center;padding:30px">Add vehicles to see data</div>';
+            // Recent
+            document.getElementById('recent-vehicles').innerHTML = vehicles.slice(0, 5).map(v => `
+<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--bg3);cursor:pointer" onclick="document.querySelector('[data-section=vehicles]').click();setTimeout(()=>openVehicle('${v.id}'),100)">
+<div><strong style="font-size:.85rem">${v.year} ${v.make} ${v.model}</strong><br><span style="font-size:.75rem;color:var(--text3)">${v.vin || 'No VIN'}</span></div>
+${statusBadge(v.status)}
+</div>`).join('') || '<div style="color:var(--text3);text-align:center;padding:30px">No vehicles yet</div>';
+        }
+
+        /* ========== YMM ANALYTICS ========== */
+        async function renderAnalytics() {
+            const vehicles = await loadVehicles();
+            const ymm = {};
+            vehicles.forEach(v => {
+                const key = `${v.year} ${v.make} ${v.model}`;
+                if (!ymm[key]) ymm[key] = { count: 0, totalPurchase: 0, totalSale: 0, totalProfit: 0 };
+                ymm[key].count++;
+                ymm[key].totalPurchase += v.purchasePrice || 0;
+                ymm[key].totalSale += (v.salePrice || 0) + (v.parts || []).filter(p => p.status === 'sold').reduce((s, p) => s + (p.soldPrice || 0), 0);
+                ymm[key].totalProfit += calcProfit(v);
+            });
+            const entries = Object.entries(ymm).sort((a, b) => b[1].totalProfit - a[1].totalProfit);
+            const best = entries[0]; const worst = entries[entries.length - 1];
+            document.getElementById('analytics-kpi').innerHTML = `
+<div class="kpi-card green"><div class="label">Most Profitable</div><div class="value" style="font-size:1.1rem">${best ? best[0] : 'N/A'}</div><div class="sub">${best ? fmt$(best[1].totalProfit) : ''}</div></div>
+<div class="kpi-card red"><div class="label">Least Profitable</div><div class="value" style="font-size:1.1rem">${worst && entries.length > 1 ? worst[0] : 'N/A'}</div><div class="sub">${worst && entries.length > 1 ? fmt$(worst[1].totalProfit) : ''}</div></div>
+<div class="kpi-card blue"><div class="label">Unique Y/M/M</div><div class="value">${entries.length}</div></div>`;
+            const maxP = Math.max(...entries.map(e => Math.abs(e[1].totalProfit)), 1);
+            document.getElementById('ymm-chart').innerHTML = entries.length ? entries.slice(0, 10).map(([k, d]) => `<div class="bar-row">
+<div class="bar-label">${k}</div>
+<div class="bar-track"><div class="bar-fill ${d.totalProfit >= 0 ? 'positive' : 'negative'}" style="width:${Math.abs(d.totalProfit) / maxP * 100}%"></div></div>
+<div class="bar-value ${d.totalProfit >= 0 ? 'profit-positive' : 'profit-negative'}">${fmt$(d.totalProfit)}</div>
+</div>`).join('') : '<div style="color:var(--text3);text-align:center;padding:30px">Add vehicles to see analytics</div>';
+            document.getElementById('ymm-tbody').innerHTML = entries.map(([k, d]) => `<tr>
+<td><strong>${k}</strong></td><td>${d.count}</td>
+<td>${fmt$(d.totalPurchase / d.count)}</td><td>${fmt$(d.totalSale / d.count)}</td>
+<td class="${d.totalProfit / d.count >= 0 ? 'profit-positive' : 'profit-negative'}">${fmt$(d.totalProfit / d.count)}</td>
+<td class="${d.totalProfit >= 0 ? 'profit-positive' : 'profit-negative'}"><strong>${fmt$(d.totalProfit)}</strong></td>
+</tr>`).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:40px">No data yet</td></tr>';
+        }
+
+        /* ========== INIT ========== */
+        renderDashboard();
+    </script>
+</body>
+
+</html>
