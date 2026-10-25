@@ -1142,9 +1142,9 @@
                 </div>
             </div>
             <div class="search-bar">
-                <input type="text" id="search-input" placeholder="Search by VIN, make, model..."
+                <input type="text" id="search-input" aria-label="Search vehicles by VIN, make, or model" placeholder="Search by VIN, make, model..."
                     oninput="renderVehicleList()">
-                <select id="filter-status" onchange="renderVehicleList()">
+                <select id="filter-status" aria-label="Filter vehicles by status" onchange="renderVehicleList()">
                     <option value="">All Statuses</option>
                     <option value="intake">Intake</option>
                     <option value="transport">Transport</option>
@@ -1180,8 +1180,8 @@
                 </div>
             </div>
             <div class="search-bar">
-                <input type="text" id="parts-search" placeholder="Search parts..." oninput="renderGlobalParts()">
-                <select id="parts-filter" onchange="renderGlobalParts()">
+                <input type="text" id="parts-search" aria-label="Search parts" placeholder="Search parts..." oninput="renderGlobalParts()">
+                <select id="parts-filter" aria-label="Filter parts by status" onchange="renderGlobalParts()">
                     <option value="">All</option>
                     <option value="available">Available</option>
                     <option value="sold">Sold</option>
