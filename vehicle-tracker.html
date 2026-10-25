@@ -1249,8 +1249,8 @@
 
     <!-- VEHICLE DETAIL MODAL -->
     <div class="modal-overlay" id="vehicle-modal">
-        <div class="modal">
-            <h2><span id="modal-title">Vehicle Details</span><button class="close-btn" onclick="closeModal()">✕</button>
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+            <h2><span id="modal-title">Vehicle Details</span><button class="close-btn" aria-label="Close vehicle details" onclick="closeModal()">✕</button>
             </h2>
             <div class="tabs" id="modal-tabs">
                 <button class="tab-btn active" data-tab="tab-info">Info</button>
